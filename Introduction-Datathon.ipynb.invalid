@@ -1,0 +1,856 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "e27e5eac-b026-46a0-8df6-8f35d989cf27",
+   "metadata": {
+    "editable": true,
+    "slideshow": {
+     "slide_type": ""
+    },
+    "tags": []
+   },
+   "source": [
+    "<img src=\"entete-datathon.jpg\" width=640/>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "b8243a45-aee5-4a26-adbd-794aa7dc5b16",
+   "metadata": {},
+   "source": [
+    "# Bienvenue dans l’aventure !\n",
+    "Prépare-toi à vivre **36 heures intenses de collaboration, d’analyse et d’innovation** où se rencontrent **finance, data science et intelligence artificielle.**\n",
+    "\n",
+    "Le Datathon 2025, c’est bien plus qu’une compétition : c’est **une immersion dans la réalité de la finance,** où tes idées et ton esprit analytique feront la différence."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c5b9570f",
+   "metadata": {},
+   "source": [
+    "## Rappel du défi\n",
+    "\n",
+    "**Contexte :** Dans un environnement financier marqué par une réglementation complexe et des sanctions économiques croissantes, votre défi est de transformer cette complexité réglementaire en opportunité d'aide à la décision pour la gestion de portefeuilles d'actions.\n",
+    "\n",
+    "**Objectif :** Concevoir un outil d'analyse et de simulation utilisant l'IA générative pour analyser automatiquement les textes réglementaires, extraire les éléments clés, évaluer l'impact sur le S&P 500, et transformer ces résultats en recommandations stratégiques concrètes.\n",
+    "\n",
+    "**Livrables attendus :**\n",
+    "- Simulation de différents scénarios\n",
+    "- Mesure des risques par entreprise, secteur ou zone géographique\n",
+    "- Propositions d'ajustements concrets (réallocation, rotation sectorielle, etc.)\n",
+    "- Outil flexible capable de traiter différents formats de documents réglementaires\n",
+    "\n",
+    "**Il est fortement recommandé de lire attentivement l'énoncé complet dans le document DATATHON POLYFINANCES 2025 CHALLENGE qui a été partagé avec tous les participants pour comprendre tous les détails et critères d'évaluation.**"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e0bd160f",
+   "metadata": {},
+   "source": [
+    "---"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f89bb0ed-dbe8-4c9d-8529-e73f6bd966d4",
+   "metadata": {},
+   "source": [
+    "## Votre environnement SageMaker Unified Studio\n",
+    "\n",
+    "Cet environnement SageMaker Unified Studio est mis à votre disposition pour le Datathon. Il vous offre un accès aux outils d'analyse et d'IA d'AWS dans un environnement Jupyter intégré.\n",
+    "\n",
+    "Le fichier [getting_started.ipynb](getting_started.ipynb) contient une introduction aux fonctionnalités de SageMaker Unified Studio et vous guidera dans la prise en main de l'environnement.\n",
+    "\n",
+    "**Important:** L'utilisation de cet environnement SageMaker n'est pas obligatoire. Vous disposez de droits d'administration sur votre compte AWS et êtes libres d'utiliser les services et outils de votre choix pour développer votre solution.\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "de5c90f3-ad3d-47cf-bd44-b4a32011c3bf",
+   "metadata": {},
+   "source": [
+    "---"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "25b8bdf2",
+   "metadata": {},
+   "source": [
+    "## Les données et documents de référence\n",
+    "\n",
+    "Le jeu de données comprend plusieurs fichiers et dossiers contenant les informations nécessaires à la résolution du cas. Vous pouvez également utiliser des sources externes (Yahoo Finance, SEC, etc.).\n",
+    "\n",
+    "**IMPORTANT** : Un nouveau document sera transmis dimanche matin pour l'évaluation finale.\n",
+    "\n",
+    "**Contenu du jeu de données :**\n",
+    "- `2025-08-15_composition_sp500.csv` : Composition du S&P 500 (ticker, nom, poids, prix)\n",
+    "- `2025-09-26_stocks-performance.csv` : Métriques de performance (valorisation, EPS, FCF, etc.)\n",
+    "- **Dossier directives** : Documents législatifs et réglementaires (UE, US, Japon, Chine, Canada)\n",
+    "- **Dossier fillings** : Rapports 10-K 2024 par ticker (exposition réglementaire détaillée)\n",
+    "\n",
+    "\n",
+    "### Téléchargement des données\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "execution_state": "idle",
+   "id": "aff86674",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-11-01T16:11:21.925045Z",
+     "iopub.status.busy": "2025-11-01T16:11:21.924794Z",
+     "iopub.status.idle": "2025-11-01T16:11:21.937813Z",
+     "shell.execute_reply": "2025-11-01T16:11:21.937071Z",
+     "shell.execute_reply.started": "2025-11-01T16:11:21.925024Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "import requests\n",
+    "import zipfile\n",
+    "import os\n",
+    "from tqdm import tqdm\n",
+    "from IPython.display import Markdown, display"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "execution_state": "idle",
+   "id": "30977577-af8d-4505-ad07-d036673d54bf",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-11-01T16:26:18.530670Z",
+     "iopub.status.busy": "2025-11-01T16:26:18.530241Z",
+     "iopub.status.idle": "2025-11-01T16:26:18.534614Z",
+     "shell.execute_reply": "2025-11-01T16:26:18.533726Z",
+     "shell.execute_reply.started": "2025-11-01T16:26:18.530636Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "prefix = \"DATA/\""
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "execution_state": "idle",
+   "id": "4c6a41be-4e5f-45b8-9631-d2ee57d37fa3",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-11-01T16:11:29.548980Z",
+     "iopub.status.busy": "2025-11-01T16:11:29.548718Z",
+     "iopub.status.idle": "2025-11-01T16:14:06.958464Z",
+     "shell.execute_reply": "2025-11-01T16:14:06.957880Z",
+     "shell.execute_reply.started": "2025-11-01T16:11:29.548960Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Extraction: 100%|██████████| 1010/1010 [02:32<00:00,  6.64it/s]\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Télécharger le fichier zip\n",
+    "url = 'https://d38aa0udflevgr.cloudfront.net/datathon/jeu_de_donnees.zip'\n",
+    "response = requests.get(url)\n",
+    "with open('jeu_de_donnees.zip', 'wb') as f:\n",
+    "    f.write(response.content)\n",
+    "\n",
+    "# Extraire le fichier zip\n",
+    "with zipfile.ZipFile('jeu_de_donnees.zip', 'r') as zip_ref:\n",
+    "    for file in tqdm(zip_ref.infolist(), desc=\"Extraction\"):\n",
+    "        zip_ref.extract(file, '.')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6228fbb8",
+   "metadata": {},
+   "source": [
+    "### Prévisualisation des données "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "execution_state": "idle",
+   "id": "4b6a61f8",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-11-01T16:26:31.818716Z",
+     "iopub.status.busy": "2025-11-01T16:26:31.818459Z",
+     "iopub.status.idle": "2025-11-01T16:26:31.944140Z",
+     "shell.execute_reply": "2025-11-01T16:26:31.943289Z",
+     "shell.execute_reply.started": "2025-11-01T16:26:31.818696Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>#</th>\n",
+       "      <th>Company</th>\n",
+       "      <th>Symbol</th>\n",
+       "      <th>Weight</th>\n",
+       "      <th>Price</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>1</td>\n",
+       "      <td>Nvidia</td>\n",
+       "      <td>NVDA</td>\n",
+       "      <td>0,0765</td>\n",
+       "      <td>181,99</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>2</td>\n",
+       "      <td>Microsoft</td>\n",
+       "      <td>MSFT</td>\n",
+       "      <td>0,0667</td>\n",
+       "      <td>520,99</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>3</td>\n",
+       "      <td>Apple Inc,</td>\n",
+       "      <td>AAPL</td>\n",
+       "      <td>0,0597</td>\n",
+       "      <td>233,28</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>4</td>\n",
+       "      <td>Amazon</td>\n",
+       "      <td>AMZN</td>\n",
+       "      <td>0,0427</td>\n",
+       "      <td>232,14</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>5</td>\n",
+       "      <td>Meta Platforms</td>\n",
+       "      <td>META</td>\n",
+       "      <td>0,0339</td>\n",
+       "      <td>783,78</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>...</th>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>498</th>\n",
+       "      <td>499</td>\n",
+       "      <td>APA Corporation</td>\n",
+       "      <td>APA</td>\n",
+       "      <td>0,0001</td>\n",
+       "      <td>20,48</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>499</th>\n",
+       "      <td>500</td>\n",
+       "      <td>MarketAxess</td>\n",
+       "      <td>MKTX</td>\n",
+       "      <td>0,0001</td>\n",
+       "      <td>187,9</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>500</th>\n",
+       "      <td>501</td>\n",
+       "      <td>News Corp (Class B)</td>\n",
+       "      <td>NWS</td>\n",
+       "      <td>0,0001</td>\n",
+       "      <td>34,4</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>501</th>\n",
+       "      <td>502</td>\n",
+       "      <td>Caesars Entertainment</td>\n",
+       "      <td>CZR</td>\n",
+       "      <td>0,0001</td>\n",
+       "      <td>25,3</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>502</th>\n",
+       "      <td>503</td>\n",
+       "      <td>Enphase Energy</td>\n",
+       "      <td>ENPH</td>\n",
+       "      <td>0,0001</td>\n",
+       "      <td>31,94</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>503 rows × 5 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "       #                Company Symbol  Weight   Price\n",
+       "0      1                 Nvidia   NVDA  0,0765  181,99\n",
+       "1      2              Microsoft   MSFT  0,0667  520,99\n",
+       "2      3             Apple Inc,   AAPL  0,0597  233,28\n",
+       "3      4                 Amazon   AMZN  0,0427  232,14\n",
+       "4      5         Meta Platforms   META  0,0339  783,78\n",
+       "..   ...                    ...    ...     ...     ...\n",
+       "498  499        APA Corporation    APA  0,0001   20,48\n",
+       "499  500            MarketAxess   MKTX  0,0001   187,9\n",
+       "500  501    News Corp (Class B)    NWS  0,0001    34,4\n",
+       "501  502  Caesars Entertainment    CZR  0,0001    25,3\n",
+       "502  503         Enphase Energy   ENPH  0,0001   31,94\n",
+       "\n",
+       "[503 rows x 5 columns]"
+      ]
+     },
+     "execution_count": 6,
+     "metadata": {},
+     "output_type": "execute_result"
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Connection: project.iam | Run start time: 2025-11-01 16:26:31.819984 | Run duration : 0:00:00.119632s.\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%local\n",
+    "# Composition du S&P 500\n",
+    "composition_sp500 = pd.read_csv(prefix + \"2025-08-15_composition_sp500.csv\")\n",
+    "composition_sp500"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "execution_state": "idle",
+   "id": "ec54b7d0-e0fa-4007-b67b-d856454efd74",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-11-01T16:26:34.723869Z",
+     "iopub.status.busy": "2025-11-01T16:26:34.723553Z",
+     "iopub.status.idle": "2025-11-01T16:26:34.844860Z",
+     "shell.execute_reply": "2025-11-01T16:26:34.844092Z",
+     "shell.execute_reply.started": "2025-11-01T16:26:34.723844Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>Symbol</th>\n",
+       "      <th>Company Name</th>\n",
+       "      <th>Market Cap</th>\n",
+       "      <th>Revenue</th>\n",
+       "      <th>Op. Income</th>\n",
+       "      <th>Net Income</th>\n",
+       "      <th>EPS</th>\n",
+       "      <th>FCF</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>NVDA</td>\n",
+       "      <td>NVIDIA Corporation</td>\n",
+       "      <td>4.338392e+12</td>\n",
+       "      <td>1.652180e+11</td>\n",
+       "      <td>9.598100e+10</td>\n",
+       "      <td>8.659700e+10</td>\n",
+       "      <td>3.520000e+00</td>\n",
+       "      <td>7.202300e+10</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>MSFT</td>\n",
+       "      <td>Microsoft Corporation</td>\n",
+       "      <td>3.801767e+12</td>\n",
+       "      <td>2.817240e+11</td>\n",
+       "      <td>1.285280e+11</td>\n",
+       "      <td>1.018320e+11</td>\n",
+       "      <td>1.364000e+01</td>\n",
+       "      <td>7.161100e+10</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>AAPL</td>\n",
+       "      <td>Apple Inc.</td>\n",
+       "      <td>3.791126e+12</td>\n",
+       "      <td>4.086250e+11</td>\n",
+       "      <td>1.302140e+11</td>\n",
+       "      <td>9.928000e+10</td>\n",
+       "      <td>6.590000e+00</td>\n",
+       "      <td>9.618400e+10</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>GOOG</td>\n",
+       "      <td>Alphabet Inc.</td>\n",
+       "      <td>2.989536e+12</td>\n",
+       "      <td>3.713990e+11</td>\n",
+       "      <td>1.213700e+11</td>\n",
+       "      <td>1.155730e+11</td>\n",
+       "      <td>9.370000e+00</td>\n",
+       "      <td>6.672800e+10</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>GOOGL</td>\n",
+       "      <td>Alphabet Inc.</td>\n",
+       "      <td>2.981796e+12</td>\n",
+       "      <td>3.713990e+11</td>\n",
+       "      <td>1.213700e+11</td>\n",
+       "      <td>1.155730e+11</td>\n",
+       "      <td>9.380000e+00</td>\n",
+       "      <td>6.672800e+10</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>...</th>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>5503</th>\n",
+       "      <td>BINI</td>\n",
+       "      <td>Bollinger Innovations, Inc.</td>\n",
+       "      <td>1.395297e+06</td>\n",
+       "      <td>9.340063e+06</td>\n",
+       "      <td>-2.686874e+08</td>\n",
+       "      <td>-4.729417e+08</td>\n",
+       "      <td>8.832306e+13</td>\n",
+       "      <td>-1.147141e+08</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>5504</th>\n",
+       "      <td>LGHL</td>\n",
+       "      <td>Lion Group Holding Ltd.</td>\n",
+       "      <td>1.356020e+05</td>\n",
+       "      <td>-4.866081e+06</td>\n",
+       "      <td>-2.671823e+07</td>\n",
+       "      <td>-2.787850e+07</td>\n",
+       "      <td>-1.250000e+02</td>\n",
+       "      <td>-1.911124e+07</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>5505</th>\n",
+       "      <td>EZGO</td>\n",
+       "      <td>EZGO Technologies Ltd.</td>\n",
+       "      <td>9.301610e+05</td>\n",
+       "      <td>1.912450e+07</td>\n",
+       "      <td>-1.968105e+06</td>\n",
+       "      <td>-4.368242e+06</td>\n",
+       "      <td>-1.440000e+00</td>\n",
+       "      <td>-1.106789e+06</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>5506</th>\n",
+       "      <td>CETX</td>\n",
+       "      <td>Cemtrex, Inc.</td>\n",
+       "      <td>1.885400e+07</td>\n",
+       "      <td>7.609555e+07</td>\n",
+       "      <td>1.373271e+06</td>\n",
+       "      <td>-2.048252e+07</td>\n",
+       "      <td>2.194160e+03</td>\n",
+       "      <td>-7.655020e+05</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>5507</th>\n",
+       "      <td>JBS</td>\n",
+       "      <td>JBS USA Holdings, Inc.</td>\n",
+       "      <td>3.245108e+10</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>NaN</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>5508 rows × 8 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "     Symbol                 Company Name    Market Cap       Revenue  \\\n",
+       "0      NVDA           NVIDIA Corporation  4.338392e+12  1.652180e+11   \n",
+       "1      MSFT        Microsoft Corporation  3.801767e+12  2.817240e+11   \n",
+       "2      AAPL                   Apple Inc.  3.791126e+12  4.086250e+11   \n",
+       "3      GOOG                Alphabet Inc.  2.989536e+12  3.713990e+11   \n",
+       "4     GOOGL                Alphabet Inc.  2.981796e+12  3.713990e+11   \n",
+       "...     ...                          ...           ...           ...   \n",
+       "5503   BINI  Bollinger Innovations, Inc.  1.395297e+06  9.340063e+06   \n",
+       "5504   LGHL      Lion Group Holding Ltd.  1.356020e+05 -4.866081e+06   \n",
+       "5505   EZGO       EZGO Technologies Ltd.  9.301610e+05  1.912450e+07   \n",
+       "5506   CETX                Cemtrex, Inc.  1.885400e+07  7.609555e+07   \n",
+       "5507    JBS       JBS USA Holdings, Inc.  3.245108e+10           NaN   \n",
+       "\n",
+       "        Op. Income    Net Income           EPS           FCF  \n",
+       "0     9.598100e+10  8.659700e+10  3.520000e+00  7.202300e+10  \n",
+       "1     1.285280e+11  1.018320e+11  1.364000e+01  7.161100e+10  \n",
+       "2     1.302140e+11  9.928000e+10  6.590000e+00  9.618400e+10  \n",
+       "3     1.213700e+11  1.155730e+11  9.370000e+00  6.672800e+10  \n",
+       "4     1.213700e+11  1.155730e+11  9.380000e+00  6.672800e+10  \n",
+       "...            ...           ...           ...           ...  \n",
+       "5503 -2.686874e+08 -4.729417e+08  8.832306e+13 -1.147141e+08  \n",
+       "5504 -2.671823e+07 -2.787850e+07 -1.250000e+02 -1.911124e+07  \n",
+       "5505 -1.968105e+06 -4.368242e+06 -1.440000e+00 -1.106789e+06  \n",
+       "5506  1.373271e+06 -2.048252e+07  2.194160e+03 -7.655020e+05  \n",
+       "5507           NaN           NaN           NaN           NaN  \n",
+       "\n",
+       "[5508 rows x 8 columns]"
+      ]
+     },
+     "execution_count": 7,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Métriques de performance\n",
+    "stocks_performance = pd.read_csv(prefix + '2025-09-26_stocks-performance.csv')\n",
+    "stocks_performance"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "fbdc6723-5b81-4650-8e14-e8b38739c3c4",
+   "metadata": {},
+   "source": [
+    "## L'IA générative avec Amazon Bedrock\n",
+    "\n",
+    "Exemple d'utilisation simple:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "e4b4e4b2-3cc2-46cd-b9ba-856cffd59370",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import boto3\n",
+    "\n",
+    "client = boto3.client(\"bedrock-runtime\")\n",
+    "\n",
+    "response = client.converse(\n",
+    "    modelId=\"global.anthropic.claude-sonnet-4-5-20250929-v1:0\",\n",
+    "    messages=[\n",
+    "        {\n",
+    "            \"role\": \"user\",\n",
+    "            \"content\": [{\"text\": \"Say hello in 3 different languages\"}]\n",
+    "        }\n",
+    "    ],\n",
+    "    inferenceConfig={\n",
+    "        \"temperature\": 0.5,\n",
+    "    }\n",
+    ")\n",
+    "\n",
+    "display(Markdown(response[\"output\"][\"message\"][\"content\"][0][\"text\"]))\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "143ec6e8-ee20-4ba6-bfee-223359b1c2d5",
+   "metadata": {},
+   "source": [
+    "## Liste de tous les modèles de Bedrock\n",
+    "\n",
+    "_À noter que pas tous les modèles sont disponible_"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "01cc0f79-aaf7-4aff-9eb0-0620f9e1b7d0",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-11-01T04:44:42.764548Z",
+     "iopub.status.busy": "2025-11-01T04:44:42.764165Z",
+     "iopub.status.idle": "2025-11-01T04:44:42.896062Z",
+     "shell.execute_reply": "2025-11-01T04:44:42.895124Z",
+     "shell.execute_reply.started": "2025-11-01T04:44:42.764520Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "# Create Bedrock client\n",
+    "bedrock = boto3.client('bedrock')\n",
+    "\n",
+    "# List all foundation models\n",
+    "response = bedrock.list_foundation_models()\n",
+    "\n",
+    "# Extract and display model IDs\n",
+    "model_ids = [model['modelId'] for model in response['modelSummaries']]\n",
+    "\n",
+    "# Print all model IDs\n",
+    "for model_id in sorted(model_ids):\n",
+    "    print(model_id)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2806628f-c1a6-40ba-bf04-6ecb3e7fa3f4",
+   "metadata": {},
+   "source": [
+    "## Certains modèles sont uniquement disponibles via un profil d'inférence global"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "9eefbb71-c8a4-4f01-ba1b-e2dd03f7630e",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-11-01T04:46:11.625836Z",
+     "iopub.status.busy": "2025-11-01T04:46:11.625566Z",
+     "iopub.status.idle": "2025-11-01T04:46:12.037453Z",
+     "shell.execute_reply": "2025-11-01T04:46:12.036672Z",
+     "shell.execute_reply.started": "2025-11-01T04:46:11.625814Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import boto3\n",
+    "\n",
+    "client = boto3.client('bedrock')\n",
+    "\n",
+    "response = client.list_inference_profiles(typeEquals='SYSTEM_DEFINED')\n",
+    "\n",
+    "# Filter for global profiles\n",
+    "global_profiles = [\n",
+    "    profile for profile in response['inferenceProfileSummaries']\n",
+    "    if profile['inferenceProfileId'].startswith('global.')\n",
+    "]\n",
+    "\n",
+    "for profile in global_profiles:\n",
+    "    print(f\"Global Profile ID: {profile['inferenceProfileId']}\")\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "06f928a1-55f1-45dc-88d3-a1c690bf4624",
+   "metadata": {},
+   "source": [
+    "## Exemple d'extraction de données non-structurées en données structurées "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "d6350134-2953-4ef4-adcc-6bf214bdbf2a",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%pip install \"instructor[bedrock]\""
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "3ffa178b-1c43-44ac-8259-2ec26a8886cc",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import boto3\n",
+    "import instructor\n",
+    "import os\n",
+    "from pydantic import BaseModel\n",
+    "\n",
+    "\n",
+    "bedrock_client = boto3.client('bedrock-runtime')\n",
+    "client = instructor.from_bedrock(bedrock_client)\n",
+    "\n",
+    "\n",
+    "class Company10K(BaseModel):\n",
+    "    company_name: str\n",
+    "    trading_symbol: str\n",
+    "    commission_file_no: str\n",
+    "    fiscal_year_end: str\n",
+    "    state_of_incorporation: str\n",
+    "    employer_id_no: str\n",
+    "    address: str\n",
+    "    phone_number: str\n",
+    "    exchange: str\n",
+    "\n",
+    "\n",
+    "company10k = client.chat.completions.create(\n",
+    "    modelId=\"global.anthropic.claude-haiku-4-5-20251001-v1:0\",\n",
+    "    messages=[\n",
+    "        {\n",
+    "            \"role\": \"user\", \n",
+    "             \"content\": f\"Extract: {open('fillings/AMZN/2025-02-07-10k-AMZN.html').read(64000)}\" \n",
+    "        },\n",
+    "    ],\n",
+    "    response_model=Company10K,\n",
+    "    inferenceConfig={\n",
+    "        \"maxTokens\": 64000,\n",
+    "    }\n",
+    ")\n",
+    "\n",
+    "display(company10k)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0e593708",
+   "metadata": {},
+   "source": [
+    "---"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "d7ab6204",
+   "metadata": {},
+   "source": [
+    "## Interagir avec vos données grâce aux Agents\n",
+    "\n",
+    "Les Agents sont une excellente façon d'interagir avec vos données de manière conversationnelle. Voici un exemple simple avec Strands Agent:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "b9635922-e045-4db2-b909-142a54c613b2",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-11-01T04:47:52.357065Z",
+     "iopub.status.busy": "2025-11-01T04:47:52.356780Z",
+     "iopub.status.idle": "2025-11-01T04:47:54.689761Z",
+     "shell.execute_reply": "2025-11-01T04:47:54.688750Z",
+     "shell.execute_reply.started": "2025-11-01T04:47:52.357044Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "%pip install strands-agents strands-agents-tools"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "d21b79fa",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2025-11-01T04:48:23.325560Z",
+     "iopub.status.busy": "2025-11-01T04:48:23.325276Z",
+     "iopub.status.idle": "2025-11-01T04:48:28.260383Z",
+     "shell.execute_reply": "2025-11-01T04:48:28.259599Z",
+     "shell.execute_reply.started": "2025-11-01T04:48:23.325537Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "from strands import Agent\n",
+    "from strands_tools import file_read\n",
+    "\n",
+    "\n",
+    "# Create an agent with default settings\n",
+    "agent = Agent(tools=[file_read])\n",
+    "\n",
+    "# Ask the agent a question\n",
+    "agent(\"Décrit les fichiers qui se trouve dans le dossier directives\")\n",
+    "agent(\"Souhaite bonne chance aux participants du Datathon PolyFinances\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c31592bb",
+   "metadata": {},
+   "source": [
+    "---\n",
+    "\n",
+    "## À vous de jouer maintenant !\n",
+    "\n",
+    "**Félicitations !** Vous avez maintenant les outils en main pour relever ce défi passionnant.\n",
+    "\n",
+    "**Il est temps de créer votre propre notebook** et de laisser libre cours à votre créativité et votre expertise technique. \n",
+    "\n",
+    "**Bonne chance, et que le meilleur gagne !** 🚀\n",
+    "\n"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.11.11"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

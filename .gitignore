@@ -1,0 +1,83 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# Environment / virtualenvs
+.env
+.venv
+env/
+venv/
+ENV/
+*.env
+
+# SageMaker and AWS-related temp files
+/.sagemaker/*
+*.sagemaker
+*.json
+*.yaml
+*.yml
+
+# Data files (keep raw data local)
+data/
+datasets/
+*.csv
+*.tsv
+*.parquet
+*.h5
+*.hdf5
+*.zip
+*.gz
+
+# Model checkpoints / artifacts
+models/
+checkpoints/
+*.ckpt
+*.pt
+*.pth
+*.onnx
+*.joblib
+*.pkl
+*.pickle
+
+# Logs
+logs/
+*.log
+*.out
+
+# OS / Editor / IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.bak
+
+# Python packaging
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Credentials and configs
+*.pem
+*.key
+*.crt
+*.config
+config.json
+secrets.json
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+
+# DATA files
+DATA
+.temp_sagemaker_unified_studio_debugging_info
+
+
