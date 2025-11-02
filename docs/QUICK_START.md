@@ -103,10 +103,23 @@ curl -X DELETE http://localhost:3000/api/laws/Law1
   - Stock impact scores influence law's overall `impact`
   - Sector changes propagate to associated stocks
 
+## Environment Variables
+
+The application requires the following environment variables for AWS Aurora DSQL connection:
+
+```bash
+AURORA_DSQL_ENDPOINT=your-cluster-endpoint-here
+AWS_REGION=us-west-2
+DATABASE_NAME=postgres
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+```
+
 ## Notes
 
 - All impact scores must be between 0-10
 - Stock sectors automatically match their law's sector
 - The `affected` count is automatically maintained
-- Update history is tracked in `data/history.json`
+- Update history is tracked in the `update_history` table in the database
+- Database connections use AWS Aurora DSQL authentication tokens
 

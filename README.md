@@ -1,6 +1,6 @@
 # Regulatory Impact CRM Dashboard
 
-A professional CRM dashboard for tracking and analyzing the impact of laws and regulations on financial markets. Built with Next.js, TypeScript, and a JSON-based mock database that's designed for seamless migration to SQL.
+A professional CRM dashboard for tracking and analyzing the impact of laws and regulations on financial markets. Built with Next.js, TypeScript, and AWS Aurora DSQL.
 
 ## Features
 
@@ -23,7 +23,7 @@ A professional CRM dashboard for tracking and analyzing the impact of laws and r
 - **Charts**: Recharts
 - **Icons**: Lucide React
 - **Backend**: Next.js API Routes
-- **Database**: JSON file-based mock database (ready for SQL migration)
+- **Database**: AWS Aurora DSQL (PostgreSQL-compatible) with token-based authentication
 
 ## Project Structure
 
@@ -44,9 +44,9 @@ datathon/
 │   └── index.tsx      # Dashboard page
 ├── types/              # TypeScript type definitions
 │   └── index.ts
-├── data/               # JSON database files
-│   ├── database.json   # Main database
-│   └── history.json    # Update history
+├── lib/                # Backend utilities
+│   ├── database.ts     # Database operations & CRUD logic (SQL-based)
+│   └── db-connection.ts # AWS Aurora DSQL connection & token management
 └── docs/               # Documentation
     └── SQL_MIGRATION_SCHEMA.md
 ```
@@ -56,6 +56,8 @@ datathon/
 ### Prerequisites
 
 - Node.js 18+ and npm/yarn/pnpm
+- AWS Account with Aurora DSQL cluster
+- AWS credentials configured (via IAM role or environment variables)
 
 ### Installation
 
@@ -64,12 +66,27 @@ datathon/
 npm install
 ```
 
-2. Start the development server:
+2. Set up environment variables (create `.env.local`):
+```bash
+AURORA_DSQL_ENDPOINT=your-cluster-endpoint-here
+AWS_REGION=us-west-2
+DATABASE_NAME=postgres
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+```
+
+3. Ensure your database has the required tables:
+   - `laws` table (see `scripts/create-relationship-table.sql` and schema documentation)
+   - `stocks` table
+   - `law_stock_relationships` table
+   - `update_history` table (optional)
+
+4. Start the development server:
 ```bash
 npm run dev
 ```
 
-3. Open [http://localhost:3000](http://localhost:3000) in your browser
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ## API Endpoints
 
@@ -132,36 +149,16 @@ Body: { ...partial stock data }
 DELETE /api/laws/[lawId]?ticker=[ticker]
 ```
 
-## Data Model
+## Database Schema
 
-### Law Structure
-```json
-{
-  "DATA": {
-    "Law1": {
-      "jurisdiction": "United States",
-      "status": "Active",
-      "sector": "Clean Energy",
-      "impact": 8,
-      "confidence": "High",
-      "published": "2024-01-15",
-      "affected": 12,
-      "stocks_impacted": {
-        "STOCK_IMPACTED": [
-          {
-            "ticker": "TSLA",
-            "company_name": "Tesla Inc.",
-            "sector": "Clean Energy",
-            "impact_score": 9,
-            "correlation_confidence": "High",
-            "notes": "Direct beneficiary of clean energy subsidies"
-          }
-        ]
-      }
-    }
-  }
-}
-```
+The application uses AWS Aurora DSQL with the following tables:
+
+### Tables
+- `laws`: Stores law information (id, jurisdiction, status, sector, impact, confidence, published, affected)
+- `stocks`: Stores stock information (ticker, company_name, sector)
+- `law_stock_relationships`: Links laws to stocks (law_id, stock_ticker, impact_score, correlation_confidence, notes)
+
+See `docs/SQL_MIGRATION_SCHEMA.md` for complete schema details.
 
 ## Data Relationships
 
@@ -181,14 +178,16 @@ DELETE /api/laws/[lawId]?ticker=[ticker]
 - Stock sectors automatically match their law's sector
 - Affected count automatically matches stock count
 
-## SQL Migration
+## Database Schema
 
-The application is designed for easy migration to SQL. See `docs/SQL_MIGRATION_SCHEMA.md` for:
+The application uses AWS Aurora DSQL (PostgreSQL-compatible). See `docs/SQL_MIGRATION_SCHEMA.md` for:
 - Complete SQL schema
-- Migration scripts
+- Table creation scripts
 - Relationship diagrams
 - Useful queries
 - Data consistency triggers
+
+The connection uses AWS Aurora DSQL token-based authentication via `@aws-sdk/dsql-signer`, which automatically refreshes tokens before expiration.
 
 ## Usage Examples
 
@@ -232,10 +231,38 @@ npm start
 
 ### Code Structure
 
-- **`lib/database.ts`**: All database operations, validation, and relationship logic
+- **`lib/db-connection.ts`**: Aurora DSQL connection and token management
+- **`lib/database.ts`**: All database CRUD operations using SQL queries
 - **`components/`**: Reusable React components
 - **`pages/api/`**: Next.js API route handlers
 - **`types/index.ts`**: TypeScript type definitions
+
+## Testing Connection
+
+Test your Aurora DSQL connection:
+```bash
+curl http://localhost:3000/api/test-connection
+```
+
+This endpoint verifies:
+- AWS credentials are configured correctly
+- Token generation is working
+- Database connection is successful
+- Required tables exist
+
+## Seed Test Data
+
+Populate your database with test data:
+```bash
+curl -X POST http://localhost:3000/api/seed-database
+```
+
+This adds:
+- 10 stocks across 3 sectors (Clean Energy, Technology, Healthcare)
+- 9 law-stock relationships
+- Updates law metrics automatically
+
+See `SEED_DATABASE_INSTRUCTIONS.md` for details.
 
 ## Future Enhancements
 

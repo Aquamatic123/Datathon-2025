@@ -44,13 +44,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Note: public directory is automatically included in .next/standalone by Next.js
 
-# Copy data directory (for JSON database files)
-# This must be at /app/data where process.cwd() will find it
-# The database.ts uses: path.join(process.cwd(), 'data', 'database.json')
-COPY --from=builder --chown=nextjs:nodejs /app/data ./data
-
-# Ensure data directory is writable (needed for database updates)
-RUN chmod -R 755 /app/data
+# Database connection is handled via AWS Aurora DSQL using environment variables
+# No local data files needed - all data is stored in the PostgreSQL database
 
 
 

@@ -1,0 +1,58 @@
+╔═══════════════════════════════════════════════════════════════╗
+║          AWS AMPLIFY ENVIRONMENT VARIABLES                    ║
+║          Copy-Paste Ready for Amplify Console                 ║
+╚═══════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Variable 1 of 5:
+
+  Name:   AURORA_DSQL_ENDPOINT
+  Value:  dbtjczatkd7mblohlvaxccqpg4.dsql.us-west-2.on.aws
+  Secret: NO
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Variable 2 of 5:
+
+  Name:   APP_REGION
+  Value:  us-west-2
+  Secret: NO
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Variable 3 of 5:
+
+  Name:   DATABASE_NAME
+  Value:  postgres
+  Secret: NO
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Variable 4 of 5: ⚠️ MARK AS SECRET
+
+  Name:   APP_ACCESS_KEY_ID
+  Value:  AKIA6ODVAJ2DK6HO7M6I
+  Secret: YES ✓ (Toggle the secret checkbox!)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Variable 5 of 5: ⚠️ MARK AS SECRET
+
+  Name:   APP_SECRET_ACCESS_KEY
+  Value:  [PASTE YOUR SECRET ACCESS KEY HERE]
+  Secret: YES ✓ (Toggle the secret checkbox!)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+IMPORTANT REMINDERS:
+  • All 5 variables are REQUIRED
+  • Mark the last 2 as "Secret" in Amplify Console
+  • Use hostname only for AURORA_DSQL_ENDPOINT (no https://)
+  • Your .env.local is safely ignored by Git
+  
+WHERE TO ADD:
+  AWS Amplify Console → Your App → Environment variables
+
+╚═══════════════════════════════════════════════════════════════╝
+

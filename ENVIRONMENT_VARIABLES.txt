@@ -1,0 +1,50 @@
+========================================
+ENVIRONMENT VARIABLES FOR AWS AMPLIFY
+========================================
+
+Copy and paste these into AWS Amplify Console:
+
+Variable Name: AURORA_DSQL_ENDPOINT
+Variable Value: dbtjczatkd7mblohlvaxccqpg4.dsql.us-west-2.on.aws
+Secret: NO
+
+Variable Name: APP_REGION
+Variable Value: us-west-2
+Secret: NO
+
+Variable Name: DATABASE_NAME
+Variable Value: postgres
+Secret: NO
+
+Variable Name: APP_ACCESS_KEY_ID
+Variable Value: AKIA6ODVAJ2DK6HO7M6I
+Secret: YES (check the secret toggle)
+
+Variable Name: APP_SECRET_ACCESS_KEY
+Variable Value: [YOUR_SECRET_ACCESS_KEY_HERE]
+Secret: YES (check the secret toggle)
+
+========================================
+IMPORTANT NOTES
+========================================
+
+1. DO NOT push .env.local to Git
+2. Mark AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY as SECRET in Amplify
+3. Endpoint is hostname only (no https://, no query parameters)
+4. These 5 variables are REQUIRED for the app to work
+5. Your .gitignore is configured to exclude all sensitive files
+
+========================================
+HOW TO ADD IN AMPLIFY CONSOLE
+========================================
+
+1. Go to: https://console.aws.amazon.com/amplify/
+2. Select your app
+3. Click "Environment variables" (left sidebar)
+4. Click "Manage variables"
+5. Click "Add variable" and enter each one above
+6. Toggle "Secret" for the two AWS credential variables
+7. Click "Save"
+
+========================================
+

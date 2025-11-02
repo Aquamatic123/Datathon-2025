@@ -19,6 +19,7 @@ export default function LawDetailsPage() {
     correlation_confidence: 'Medium',
     notes: '',
   });
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     if (lawId && typeof lawId === 'string') {
@@ -27,11 +28,11 @@ export default function LawDetailsPage() {
   }, [lawId]);
 
   const fetchLaw = async (id: string) => {
+    setLoading(true);
     try {
-      const encodedId = encodeURIComponent(id);
-      const response = await fetch(`/api/laws/${encodedId}`);
+      const response = await fetch(`/api/laws/${encodeURIComponent(id)}`);
+      const data = await response.json();
       if (response.ok) {
-        const data = await response.json();
         setLaw(data);
         setEditedLaw(data);
         if (data.sector) {
@@ -50,39 +51,33 @@ export default function LawDetailsPage() {
 
   const handleSave = async () => {
     if (!lawId || typeof lawId !== 'string' || !editedLaw) return;
-
+    setActionLoading(true);
     try {
-      const encodedLawId = encodeURIComponent(lawId);
-      const response = await fetch(`/api/laws/${encodedLawId}`, {
+      const response = await fetch(`/api/laws/${encodeURIComponent(lawId)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editedLaw),
       });
-
       if (response.ok) {
         setIsEditing(false);
         fetchLaw(lawId);
-      } else {
-        alert('Failed to update law');
       }
     } catch (error) {
       console.error('Error updating law:', error);
-      alert('Error updating law');
+    } finally {
+      setActionLoading(false);
     }
   };
 
   const handleAddStock = async () => {
     if (!lawId || typeof lawId !== 'string' || !law) return;
-
+    setActionLoading(true);
     try {
-      const encodedLawId = encodeURIComponent(lawId);
-      const encodedTicker = encodeURIComponent(newStock.ticker || '');
-      const response = await fetch(`/api/laws/${encodedLawId}?ticker=${encodedTicker}`, {
+      const response = await fetch(`/api/laws/${encodeURIComponent(lawId)}?ticker=${encodeURIComponent(newStock.ticker || '')}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newStock as StockImpacted),
       });
-
       if (response.ok) {
         setShowAddStock(false);
         setNewStock({
@@ -94,36 +89,30 @@ export default function LawDetailsPage() {
           notes: '',
         });
         fetchLaw(lawId);
-      } else {
-        alert('Failed to add stock');
       }
     } catch (error) {
       console.error('Error adding stock:', error);
-      alert('Error adding stock');
+    } finally {
+      setActionLoading(false);
     }
   };
 
   const handleDeleteStock = async (ticker: string) => {
     if (!lawId || typeof lawId !== 'string') return;
-    if (!confirm(`Are you sure you want to remove ${ticker}?`)) {
-      return;
-    }
+    if (!confirm(`Are you sure you want to remove ${ticker}?`)) return;
 
+    setActionLoading(true);
     try {
-      const encodedLawId = encodeURIComponent(lawId);
-      const encodedTicker = encodeURIComponent(ticker);
-      const response = await fetch(`/api/laws/${encodedLawId}?ticker=${encodedTicker}`, {
+      const response = await fetch(`/api/laws/${encodeURIComponent(lawId)}?ticker=${encodeURIComponent(ticker)}`, {
         method: 'DELETE',
       });
-
       if (response.ok) {
         fetchLaw(lawId);
-      } else {
-        alert('Failed to remove stock');
       }
     } catch (error) {
       console.error('Error removing stock:', error);
-      alert('Error removing stock');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -141,41 +130,29 @@ export default function LawDetailsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'expired':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      case 'active': return 'bg-green-100 text-green-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'expired': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getConfidenceColor = (confidence: string) => {
     switch (confidence.toLowerCase()) {
-      case 'high':
-        return 'bg-blue-100 text-blue-800';
-      case 'medium':
-        return 'bg-orange-100 text-orange-800';
-      case 'low':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      case 'high': return 'bg-blue-100 text-blue-800';
+      case 'medium': return 'bg-orange-100 text-orange-800';
+      case 'low': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push('/')}
-                className="text-gray-600 hover:text-gray-900"
-              >
+              <button onClick={() => router.push('/')} className="text-gray-600 hover:text-gray-900">
                 <ArrowLeft className="h-5 w-5" />
               </button>
               <div>
@@ -186,7 +163,8 @@ export default function LawDetailsPage() {
             {!isEditing ? (
               <button
                 onClick={() => setIsEditing(true)}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                disabled={actionLoading}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
               >
                 <Edit2 className="h-4 w-4 mr-2" />
                 Edit
@@ -195,16 +173,18 @@ export default function LawDetailsPage() {
               <div className="flex gap-2">
                 <button
                   onClick={handleSave}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                  disabled={actionLoading}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
                 >
                   <Save className="h-4 w-4 mr-2" />
-                  Save
+                  {actionLoading ? 'Saving...' : 'Save'}
                 </button>
                 <button
                   onClick={() => {
                     setIsEditing(false);
                     setEditedLaw(law);
                   }}
+                  disabled={actionLoading}
                   className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                 >
                   <X className="h-4 w-4 mr-2" />
@@ -217,7 +197,6 @@ export default function LawDetailsPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Law Information Table */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-900">Law Information</h2>
@@ -226,18 +205,15 @@ export default function LawDetailsPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <tbody className="bg-white divide-y divide-gray-200">
                 <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 bg-gray-50 w-1/4">
-                    Jurisdiction
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 bg-gray-50 w-1/4">Jurisdiction</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {isEditing && editedLaw ? (
                       <input
                         type="text"
                         value={editedLaw.jurisdiction}
-                        onChange={(e) =>
-                          setEditedLaw({ ...editedLaw, jurisdiction: e.target.value })
-                        }
+                        onChange={(e) => setEditedLaw({ ...editedLaw, jurisdiction: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+                        disabled={actionLoading}
                       />
                     ) : (
                       law.jurisdiction
@@ -245,46 +221,36 @@ export default function LawDetailsPage() {
                   </td>
                 </tr>
                 <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 bg-gray-50">
-                    Status
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 bg-gray-50">Status</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {isEditing && editedLaw ? (
                       <select
                         value={editedLaw.status}
-                        onChange={(e) =>
-                          setEditedLaw({ ...editedLaw, status: e.target.value })
-                        }
+                        onChange={(e) => setEditedLaw({ ...editedLaw, status: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+                        disabled={actionLoading}
                       >
                         <option>Active</option>
                         <option>Pending</option>
                         <option>Expired</option>
                       </select>
                     ) : (
-                      <span
-                        className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
-                          law.status
-                        )}`}
-                      >
+                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(law.status)}`}>
                         {law.status}
                       </span>
                     )}
                   </td>
                 </tr>
                 <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 bg-gray-50">
-                    Sector
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 bg-gray-50">Sector</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {isEditing && editedLaw ? (
                       <input
                         type="text"
                         value={editedLaw.sector}
-                        onChange={(e) =>
-                          setEditedLaw({ ...editedLaw, sector: e.target.value })
-                        }
+                        onChange={(e) => setEditedLaw({ ...editedLaw, sector: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+                        disabled={actionLoading}
                       />
                     ) : (
                       law.sector
@@ -292,9 +258,7 @@ export default function LawDetailsPage() {
                   </td>
                 </tr>
                 <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 bg-gray-50">
-                    Impact
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 bg-gray-50">Impact</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {isEditing && editedLaw ? (
                       <input
@@ -302,65 +266,51 @@ export default function LawDetailsPage() {
                         min="0"
                         max="10"
                         value={editedLaw.impact}
-                        onChange={(e) =>
-                          setEditedLaw({ ...editedLaw, impact: parseInt(e.target.value) })
-                        }
+                        onChange={(e) => setEditedLaw({ ...editedLaw, impact: parseInt(e.target.value) || 0 })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+                        disabled={actionLoading}
                       />
                     ) : (
                       <div className="flex items-center">
                         <span className="font-medium">{law.impact}/10</span>
                         <div className="ml-2 w-32 bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-blue-600 h-2 rounded-full"
-                            style={{ width: `${(law.impact / 10) * 100}%` }}
-                          />
+                          <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${(law.impact / 10) * 100}%` }} />
                         </div>
                       </div>
                     )}
                   </td>
                 </tr>
                 <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 bg-gray-50">
-                    Confidence
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 bg-gray-50">Confidence</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {isEditing && editedLaw ? (
                       <select
                         value={editedLaw.confidence}
-                        onChange={(e) =>
-                          setEditedLaw({ ...editedLaw, confidence: e.target.value })
-                        }
+                        onChange={(e) => setEditedLaw({ ...editedLaw, confidence: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+                        disabled={actionLoading}
                       >
                         <option>High</option>
                         <option>Medium</option>
                         <option>Low</option>
                       </select>
                     ) : (
-                      <span
-                        className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getConfidenceColor(
-                          law.confidence
-                        )}`}
-                      >
+                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getConfidenceColor(law.confidence)}`}>
                         {law.confidence}
                       </span>
                     )}
                   </td>
                 </tr>
                 <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 bg-gray-50">
-                    Published Date
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 bg-gray-50">Published Date</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {isEditing && editedLaw ? (
                       <input
                         type="date"
                         value={editedLaw.published}
-                        onChange={(e) =>
-                          setEditedLaw({ ...editedLaw, published: e.target.value })
-                        }
+                        onChange={(e) => setEditedLaw({ ...editedLaw, published: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+                        disabled={actionLoading}
                       />
                     ) : (
                       new Date(law.published).toLocaleDateString()
@@ -368,26 +318,22 @@ export default function LawDetailsPage() {
                   </td>
                 </tr>
                 <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 bg-gray-50">
-                    Stocks Affected
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {law.affected}
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 bg-gray-50">Stocks Affected</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{law.affected}</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* Stocks Impacted Table */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-900">Stocks Impacted</h2>
             {!isEditing && (
               <button
                 onClick={() => setShowAddStock(!showAddStock)}
-                className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-800"
+                disabled={actionLoading}
+                className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50"
               >
                 <Plus className="h-4 w-4 mr-1" />
                 Add Stock
@@ -399,71 +345,56 @@ export default function LawDetailsPage() {
             <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ticker *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Ticker *</label>
                   <input
                     type="text"
                     placeholder="TSLA"
                     value={newStock.ticker}
-                    onChange={(e) =>
-                      setNewStock({ ...newStock, ticker: e.target.value.toUpperCase() })
-                    }
+                    onChange={(e) => setNewStock({ ...newStock, ticker: e.target.value.toUpperCase() })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900"
+                    disabled={actionLoading}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Company Name *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Company Name *</label>
                   <input
                     type="text"
                     placeholder="Tesla Inc."
                     value={newStock.company_name}
-                    onChange={(e) =>
-                      setNewStock({ ...newStock, company_name: e.target.value })
-                    }
+                    onChange={(e) => setNewStock({ ...newStock, company_name: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900"
+                    disabled={actionLoading}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Sector *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Sector *</label>
                   <input
                     type="text"
                     value={newStock.sector || law.sector}
-                    onChange={(e) =>
-                      setNewStock({ ...newStock, sector: e.target.value })
-                    }
+                    onChange={(e) => setNewStock({ ...newStock, sector: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900"
+                    disabled={actionLoading}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Impact Score (0-10) *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Impact Score (0-10) *</label>
                   <input
                     type="number"
                     min="0"
                     max="10"
                     value={newStock.impact_score}
-                    onChange={(e) =>
-                      setNewStock({ ...newStock, impact_score: parseInt(e.target.value) })
-                    }
+                    onChange={(e) => setNewStock({ ...newStock, impact_score: parseInt(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900"
+                    disabled={actionLoading}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Correlation Confidence *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Correlation Confidence *</label>
                   <select
                     value={newStock.correlation_confidence}
-                    onChange={(e) =>
-                      setNewStock({ ...newStock, correlation_confidence: e.target.value })
-                    }
+                    onChange={(e) => setNewStock({ ...newStock, correlation_confidence: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900"
+                    disabled={actionLoading}
                   >
                     <option>High</option>
                     <option>Medium</option>
@@ -471,29 +402,28 @@ export default function LawDetailsPage() {
                   </select>
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Notes
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
                   <textarea
                     placeholder="Additional notes..."
                     value={newStock.notes}
-                    onChange={(e) =>
-                      setNewStock({ ...newStock, notes: e.target.value })
-                    }
+                    onChange={(e) => setNewStock({ ...newStock, notes: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900"
                     rows={2}
+                    disabled={actionLoading}
                   />
                 </div>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={handleAddStock}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+                  disabled={actionLoading}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm disabled:opacity-50"
                 >
-                  Add Stock
+                  {actionLoading ? 'Adding...' : 'Add Stock'}
                 </button>
                 <button
                   onClick={() => setShowAddStock(false)}
+                  disabled={actionLoading}
                   className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm"
                 >
                   Cancel
@@ -506,81 +436,50 @@ export default function LawDetailsPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ticker
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Company Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Sector
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Impact Score
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Correlation Confidence
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Notes
-                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticker</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sector</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Impact Score</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Correlation Confidence</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
                   {!isEditing && (
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   )}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {law.stocks_impacted.STOCK_IMPACTED.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={isEditing ? 6 : 7}
-                      className="px-6 py-8 text-center text-gray-500"
-                    >
+                    <td colSpan={isEditing ? 6 : 7} className="px-6 py-8 text-center text-gray-500">
                       No stocks added yet.
                     </td>
                   </tr>
                 ) : (
                   law.stocks_impacted.STOCK_IMPACTED.map((stock, index) => (
                     <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {stock.ticker}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {stock.company_name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {stock.sector}
-                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{stock.ticker}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{stock.company_name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{stock.sector}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         <div className="flex items-center">
                           <span className="font-medium">{stock.impact_score}/10</span>
                           <div className="ml-2 w-16 bg-gray-200 rounded-full h-2">
-                            <div
-                              className="bg-green-600 h-2 rounded-full"
-                              style={{ width: `${(stock.impact_score / 10) * 100}%` }}
-                            />
+                            <div className="bg-green-600 h-2 rounded-full" style={{ width: `${(stock.impact_score / 10) * 100}%` }} />
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getConfidenceColor(
-                            stock.correlation_confidence
-                          )}`}
-                        >
+                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getConfidenceColor(stock.correlation_confidence)}`}>
                           {stock.correlation_confidence}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {stock.notes || '-'}
-                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{stock.notes || '-'}</td>
                       {!isEditing && (
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <button
                             onClick={() => handleDeleteStock(stock.ticker)}
-                            className="text-red-600 hover:text-red-900"
+                            disabled={actionLoading}
+                            className="text-red-600 hover:text-red-900 disabled:opacity-50"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -597,4 +496,3 @@ export default function LawDetailsPage() {
     </div>
   );
 }
-

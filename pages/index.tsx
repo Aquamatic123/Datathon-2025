@@ -12,6 +12,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
+    setLoading(true);
     try {
       const [lawsRes, analyticsRes] = await Promise.all([
         fetch('/api/laws'),
@@ -21,7 +22,7 @@ export default function Dashboard() {
       const lawsData = await lawsRes.json();
       const analyticsData = await analyticsRes.json();
       
-      setDatabase(lawsData);
+      setDatabase(lawsData.DATA ? lawsData : { DATA: lawsData.DATA || {} });
       setAnalytics(analyticsData);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -34,29 +35,20 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
-  const handleAddLaw = () => {
-    setShowAddModal(true);
-  };
-
-  const handleCloseAddModal = () => {
-    setShowAddModal(false);
-    fetchData();
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-xl text-gray-600">Loading dashboard...</div>
+        <div className="text-xl text-gray-600">Loading...</div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <DashboardHeader onAddLaw={handleAddLaw} />
+      <DashboardHeader onAddLaw={() => setShowAddModal(true)} />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {analytics && <AnalyticsCards analytics={analytics} />}
+        <AnalyticsCards analytics={analytics} />
         
         <div className="mt-8">
           {database && (
@@ -70,11 +62,13 @@ export default function Dashboard() {
 
       {showAddModal && (
         <AddLawModal
-          onClose={handleCloseAddModal}
-          onSave={handleCloseAddModal}
+          onClose={() => setShowAddModal(false)}
+          onSave={() => {
+            setShowAddModal(false);
+            fetchData();
+          }}
         />
       )}
     </div>
   );
 }
-

@@ -2,32 +2,41 @@ import { Analytics } from '@/types';
 import { TrendingUp, Building2, BarChart3, Target } from 'lucide-react';
 
 interface AnalyticsCardsProps {
-  analytics: Analytics;
+  analytics: Analytics | null;
 }
 
 export default function AnalyticsCards({ analytics }: AnalyticsCardsProps) {
+  // Provide default values to prevent undefined errors
+  const safeAnalytics = {
+    totalLaws: analytics?.totalLaws ?? 0,
+    totalStocksImpacted: analytics?.totalStocksImpacted ?? 0,
+    sp500AffectedPercentage: analytics?.sp500AffectedPercentage ?? 0,
+    confidenceWeightedImpact: analytics?.confidenceWeightedImpact ?? 0,
+    averageImpactBySector: analytics?.averageImpactBySector ?? {},
+  };
+
   const cards = [
     {
       title: 'Total Laws',
-      value: analytics.totalLaws,
+      value: safeAnalytics.totalLaws,
       icon: Building2,
       color: 'bg-blue-500',
     },
     {
       title: 'Stocks Impacted',
-      value: analytics.totalStocksImpacted,
+      value: safeAnalytics.totalStocksImpacted,
       icon: TrendingUp,
       color: 'bg-green-500',
     },
     {
       title: 'SP500 Affected',
-      value: `${analytics.sp500AffectedPercentage.toFixed(2)}%`,
+      value: `${safeAnalytics.sp500AffectedPercentage.toFixed(2)}%`,
       icon: BarChart3,
       color: 'bg-purple-500',
     },
     {
       title: 'Avg Impact Score',
-      value: analytics.confidenceWeightedImpact.toFixed(2),
+      value: safeAnalytics.confidenceWeightedImpact.toFixed(2),
       icon: Target,
       color: 'bg-orange-500',
     },

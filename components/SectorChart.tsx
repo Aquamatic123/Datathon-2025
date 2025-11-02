@@ -2,13 +2,21 @@ import { Analytics } from '@/types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface SectorChartProps {
-  analytics: Analytics;
+  analytics: Analytics | null;
 }
 
 export default function SectorChart({ analytics }: SectorChartProps) {
-  const chartData = Object.entries(analytics.averageImpactBySector).map(([sector, impact]) => ({
+  const safeAnalytics = analytics || {
+    totalLaws: 0,
+    totalStocksImpacted: 0,
+    sp500AffectedPercentage: 0,
+    confidenceWeightedImpact: 0,
+    averageImpactBySector: {},
+  };
+
+  const chartData = Object.entries(safeAnalytics.averageImpactBySector).map(([sector, impact]) => ({
     sector,
-    impact: Number(impact.toFixed(2)),
+    impact: Number(typeof impact === 'number' ? impact.toFixed(2) : 0),
   }));
 
   return (

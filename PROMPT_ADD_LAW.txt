@@ -1,0 +1,58 @@
+========================================
+PROMPT: ADD LAW4 (Finance) WITH 3 STOCKS
+========================================
+
+Copy and paste each command one by one:
+
+# 1. CREATE LAW4
+curl -X POST http://localhost:3000/api/laws/Law4 -H "Content-Type: application/json" -d '{"jurisdiction":"United States","status":"Active","sector":"Finance","impact":7,"confidence":"High","published":"2024-03-15","affected":0,"stocks_impacted":{"STOCK_IMPACTED":[]}}'
+
+# 2. ADD JPM TO LAW4
+curl -X POST 'http://localhost:3000/api/laws/Law4?ticker=JPM' -H "Content-Type: application/json" -d '{"ticker":"JPM","company_name":"JPMorgan Chase & Co.","sector":"Finance","impact_score":8,"correlation_confidence":"High","notes":"Banking regulation impact"}'
+
+# 3. ADD BAC TO LAW4
+curl -X POST 'http://localhost:3000/api/laws/Law4?ticker=BAC' -H "Content-Type: application/json" -d '{"ticker":"BAC","company_name":"Bank of America Corp.","sector":"Finance","impact_score":7,"correlation_confidence":"Medium","notes":"Consumer banking regulations"}'
+
+# 4. ADD GS TO LAW4
+curl -X POST 'http://localhost:3000/api/laws/Law4?ticker=GS' -H "Content-Type: application/json" -d '{"ticker":"GS","company_name":"Goldman Sachs Group Inc.","sector":"Finance","impact_score":9,"correlation_confidence":"High","notes":"Investment banking regulations"}'
+
+# 5. VERIFY LAW4
+curl -s http://localhost:3000/api/laws/Law4 | python3 -m json.tool
+
+========================================
+WHAT HAPPENS IN AURORA DSQL:
+========================================
+
+1. laws table:
+   INSERT Law4 → id='Law4', sector='Finance', affected=0, impact=7
+
+2. stocks table (3 inserts):
+   INSERT JPM → ticker='JPM', company_name='JPMorgan Chase & Co.', sector='Finance'
+   INSERT BAC → ticker='BAC', company_name='Bank of America Corp.', sector='Finance'
+   INSERT GS → ticker='GS', company_name='Goldman Sachs Group Inc.', sector='Finance'
+
+3. law_stock_relationships table (3 inserts):
+   INSERT → law_id='Law4', stock_ticker='JPM', impact_score=8
+   INSERT → law_id='Law4', stock_ticker='BAC', impact_score=7
+   INSERT → law_id='Law4', stock_ticker='GS', impact_score=9
+
+4. laws table (auto-update after each stock):
+   UPDATE Law4 → affected=1, impact=8  (after JPM)
+   UPDATE Law4 → affected=2, impact=8  (after BAC)
+   UPDATE Law4 → affected=3, impact=8  (after GS, avg of 8,7,9)
+
+========================================
+RESULT:
+========================================
+
+Law4 will have:
+- 3 stocks in law_stock_relationships table
+- All stocks fetched through JOIN with stocks table
+- affected count = 3
+- impact score = 8 (average of stock impacts)
+
+All data stored in Aurora DSQL!
+No mock data, no JSON files.
+
+========================================
+

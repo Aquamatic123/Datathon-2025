@@ -23,7 +23,21 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
+.env
 .env*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# AWS credentials and configuration
+.aws/
+aws-credentials.txt
+*credentials*.txt
+*token*.md
+*aurora*dsql*.md
+postgres_aurora_DSQL.md
+token_dsql-cluster-1.md
 
 # vercel
 .vercel
@@ -32,4 +46,23 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# python
 venv
+__pycache__/
+*.py[cod]
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.log

@@ -9,12 +9,7 @@ interface LawDetailsModalProps {
   onUpdate: () => void;
 }
 
-export default function LawDetailsModal({
-  lawId,
-  law,
-  onClose,
-  onUpdate,
-}: LawDetailsModalProps) {
+export default function LawDetailsModal({ lawId, law, onClose, onUpdate }: LawDetailsModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedLaw, setEditedLaw] = useState<Law>(law);
   const [showAddStock, setShowAddStock] = useState(false);
@@ -26,35 +21,35 @@ export default function LawDetailsModal({
     correlation_confidence: 'Medium',
     notes: '',
   });
+  const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
+    setLoading(true);
     try {
-      const response = await fetch(`/api/laws/${lawId}`, {
+      const response = await fetch(`/api/laws/${encodeURIComponent(lawId)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editedLaw),
       });
-
       if (response.ok) {
         setIsEditing(false);
         onUpdate();
-      } else {
-        alert('Failed to update law');
       }
     } catch (error) {
       console.error('Error updating law:', error);
-      alert('Error updating law');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleAddStock = async () => {
+    setLoading(true);
     try {
-      const response = await fetch(`/api/laws/${lawId}?ticker=${newStock.ticker}`, {
+      const response = await fetch(`/api/laws/${encodeURIComponent(lawId)}?ticker=${encodeURIComponent(newStock.ticker || '')}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newStock as StockImpacted),
       });
-
       if (response.ok) {
         setShowAddStock(false);
         setNewStock({
@@ -66,33 +61,29 @@ export default function LawDetailsModal({
           notes: '',
         });
         onUpdate();
-      } else {
-        alert('Failed to add stock');
       }
     } catch (error) {
       console.error('Error adding stock:', error);
-      alert('Error adding stock');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDeleteStock = async (ticker: string) => {
-    if (!confirm(`Are you sure you want to remove ${ticker}?`)) {
-      return;
-    }
+    if (!confirm(`Are you sure you want to remove ${ticker}?`)) return;
 
+    setLoading(true);
     try {
-      const response = await fetch(`/api/laws/${lawId}?ticker=${ticker}`, {
+      const response = await fetch(`/api/laws/${encodeURIComponent(lawId)}?ticker=${encodeURIComponent(ticker)}`, {
         method: 'DELETE',
       });
-
       if (response.ok) {
         onUpdate();
-      } else {
-        alert('Failed to remove stock');
       }
     } catch (error) {
       console.error('Error removing stock:', error);
-      alert('Error removing stock');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -105,16 +96,14 @@ export default function LawDetailsModal({
             {!isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800"
+                disabled={loading}
+                className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50"
               >
                 <Edit2 className="h-4 w-4 inline mr-1" />
                 Edit
               </button>
             )}
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
-            >
+            <button onClick={onClose} disabled={loading} className="text-gray-400 hover:text-gray-600">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -125,28 +114,22 @@ export default function LawDetailsModal({
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Jurisdiction
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Jurisdiction</label>
                   <input
                     type="text"
                     value={editedLaw.jurisdiction}
-                    onChange={(e) =>
-                      setEditedLaw({ ...editedLaw, jurisdiction: e.target.value })
-                    }
+                    onChange={(e) => setEditedLaw({ ...editedLaw, jurisdiction: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    disabled={loading}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Status
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                   <select
                     value={editedLaw.status}
-                    onChange={(e) =>
-                      setEditedLaw({ ...editedLaw, status: e.target.value })
-                    }
+                    onChange={(e) => setEditedLaw({ ...editedLaw, status: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    disabled={loading}
                   >
                     <option>Active</option>
                     <option>Pending</option>
@@ -154,43 +137,34 @@ export default function LawDetailsModal({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Sector
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Sector</label>
                   <input
                     type="text"
                     value={editedLaw.sector}
-                    onChange={(e) =>
-                      setEditedLaw({ ...editedLaw, sector: e.target.value })
-                    }
+                    onChange={(e) => setEditedLaw({ ...editedLaw, sector: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    disabled={loading}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Impact (0-10)
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Impact (0-10)</label>
                   <input
                     type="number"
                     min="0"
                     max="10"
                     value={editedLaw.impact}
-                    onChange={(e) =>
-                      setEditedLaw({ ...editedLaw, impact: parseInt(e.target.value) })
-                    }
+                    onChange={(e) => setEditedLaw({ ...editedLaw, impact: parseInt(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    disabled={loading}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Confidence
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Confidence</label>
                   <select
                     value={editedLaw.confidence}
-                    onChange={(e) =>
-                      setEditedLaw({ ...editedLaw, confidence: e.target.value })
-                    }
+                    onChange={(e) => setEditedLaw({ ...editedLaw, confidence: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    disabled={loading}
                   >
                     <option>High</option>
                     <option>Medium</option>
@@ -198,31 +172,30 @@ export default function LawDetailsModal({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Published Date
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Published Date</label>
                   <input
                     type="date"
                     value={editedLaw.published}
-                    onChange={(e) =>
-                      setEditedLaw({ ...editedLaw, published: e.target.value })
-                    }
+                    onChange={(e) => setEditedLaw({ ...editedLaw, published: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    disabled={loading}
                   />
                 </div>
               </div>
               <div className="flex gap-2 pt-4">
                 <button
                   onClick={handleSave}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  disabled={loading}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
                 >
-                  Save Changes
+                  {loading ? 'Saving...' : 'Save Changes'}
                 </button>
                 <button
                   onClick={() => {
                     setIsEditing(false);
                     setEditedLaw(law);
                   }}
+                  disabled={loading}
                   className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
                 >
                   Cancel
@@ -254,9 +227,7 @@ export default function LawDetailsModal({
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Published</label>
-                  <p className="text-lg text-gray-900">
-                    {new Date(law.published).toLocaleDateString()}
-                  </p>
+                  <p className="text-lg text-gray-900">{new Date(law.published).toLocaleDateString()}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Stocks Affected</label>
@@ -269,7 +240,8 @@ export default function LawDetailsModal({
                   <h3 className="text-lg font-semibold text-gray-900">Impacted Stocks</h3>
                   <button
                     onClick={() => setShowAddStock(!showAddStock)}
-                    className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-800"
+                    disabled={loading}
+                    className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50"
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     Add Stock
@@ -283,19 +255,17 @@ export default function LawDetailsModal({
                         type="text"
                         placeholder="Ticker"
                         value={newStock.ticker}
-                        onChange={(e) =>
-                          setNewStock({ ...newStock, ticker: e.target.value.toUpperCase() })
-                        }
+                        onChange={(e) => setNewStock({ ...newStock, ticker: e.target.value.toUpperCase() })}
                         className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                        disabled={loading}
                       />
                       <input
                         type="text"
                         placeholder="Company Name"
                         value={newStock.company_name}
-                        onChange={(e) =>
-                          setNewStock({ ...newStock, company_name: e.target.value })
-                        }
+                        onChange={(e) => setNewStock({ ...newStock, company_name: e.target.value })}
                         className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                        disabled={loading}
                       />
                       <input
                         type="number"
@@ -303,17 +273,15 @@ export default function LawDetailsModal({
                         max="10"
                         placeholder="Impact Score"
                         value={newStock.impact_score}
-                        onChange={(e) =>
-                          setNewStock({ ...newStock, impact_score: parseInt(e.target.value) })
-                        }
+                        onChange={(e) => setNewStock({ ...newStock, impact_score: parseInt(e.target.value) || 0 })}
                         className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                        disabled={loading}
                       />
                       <select
                         value={newStock.correlation_confidence}
-                        onChange={(e) =>
-                          setNewStock({ ...newStock, correlation_confidence: e.target.value })
-                        }
+                        onChange={(e) => setNewStock({ ...newStock, correlation_confidence: e.target.value })}
                         className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                        disabled={loading}
                       >
                         <option>High</option>
                         <option>Medium</option>
@@ -323,21 +291,22 @@ export default function LawDetailsModal({
                     <textarea
                       placeholder="Notes"
                       value={newStock.notes}
-                      onChange={(e) =>
-                        setNewStock({ ...newStock, notes: e.target.value })
-                      }
+                      onChange={(e) => setNewStock({ ...newStock, notes: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                       rows={2}
+                      disabled={loading}
                     />
                     <div className="flex gap-2">
                       <button
                         onClick={handleAddStock}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+                        disabled={loading}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm disabled:opacity-50"
                       >
-                        Add Stock
+                        {loading ? 'Adding...' : 'Add Stock'}
                       </button>
                       <button
                         onClick={() => setShowAddStock(false)}
+                        disabled={loading}
                         className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm"
                       >
                         Cancel
@@ -351,28 +320,20 @@ export default function LawDetailsModal({
                     <p className="text-gray-500 text-sm">No stocks added yet.</p>
                   ) : (
                     law.stocks_impacted.STOCK_IMPACTED.map((stock, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                      >
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div className="flex-1">
                           <div className="flex items-center gap-3">
                             <span className="font-semibold text-gray-900">{stock.ticker}</span>
                             <span className="text-sm text-gray-600">{stock.company_name}</span>
-                            <span className="text-sm text-gray-500">
-                              Impact: {stock.impact_score}/10
-                            </span>
-                            <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
-                              {stock.correlation_confidence}
-                            </span>
+                            <span className="text-sm text-gray-500">Impact: {stock.impact_score}/10</span>
+                            <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">{stock.correlation_confidence}</span>
                           </div>
-                          {stock.notes && (
-                            <p className="text-sm text-gray-500 mt-1">{stock.notes}</p>
-                          )}
+                          {stock.notes && <p className="text-sm text-gray-500 mt-1">{stock.notes}</p>}
                         </div>
                         <button
                           onClick={() => handleDeleteStock(stock.ticker)}
-                          className="text-red-600 hover:text-red-800 ml-4"
+                          disabled={loading}
+                          className="text-red-600 hover:text-red-800 ml-4 disabled:opacity-50"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -388,4 +349,3 @@ export default function LawDetailsModal({
     </div>
   );
 }
-

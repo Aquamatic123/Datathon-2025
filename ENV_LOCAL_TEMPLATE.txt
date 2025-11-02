@@ -1,0 +1,28 @@
+# Aurora DSQL Configuration - .env.local Template
+# ===========================
+# This file shows the CORRECT environment variable names
+# Copy these to your .env.local file
+
+# Aurora DSQL Endpoint (hostname only, no protocol or query parameters)
+AURORA_DSQL_ENDPOINT=dbtjczatkd7mblohlvaxccqpg4.dsql.us-west-2.on.aws
+
+# AWS Region where your Aurora DSQL cluster is located
+APP_REGION=us-west-2
+
+# Database name to connect to
+DATABASE_NAME=postgres
+
+# AWS Access Key ID with DSQL permissions (mark as SECRET in Amplify)
+APP_ACCESS_KEY_ID=AKIA6ODVAJ2DK6HO7M6I
+
+# AWS Secret Access Key (mark as SECRET in Amplify)
+APP_SECRET_ACCESS_KEY=your-secret-access-key-here
+
+# ===========================
+# IMPORTANT NOTES:
+# ===========================
+# ✓ Use APP_* variable names (not AWS_*)
+# ✓ The code now explicitly passes credentials to AWS SDK
+# ✓ Your .env.local file is ignored by Git
+# ✓ Same variables work for local development AND AWS Amplify
+

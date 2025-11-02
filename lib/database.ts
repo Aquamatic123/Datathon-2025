@@ -1,383 +1,506 @@
-import { Database, Law, StockImpacted, Analytics, UpdateHistory } from '@/types';
-import fs from 'fs';
-import path from 'path';
+import { Law, StockImpacted, Analytics, UpdateHistory } from '@/types';
+import { executeQuery } from './db-connection';
 
-const DB_PATH = path.join(process.cwd(), 'data', 'database.json');
-const HISTORY_PATH = path.join(process.cwd(), 'data', 'history.json');
+// Get all laws with their stock relationships
+export async function getAllLaws(): Promise<{ [lawId: string]: Law }> {
+  console.log('📚 Fetching all laws from Aurora DSQL...');
+  
+  const laws = await executeQuery<{
+    id: string;
+    jurisdiction: string;
+    status: string;
+    sector: string;
+    impact: number;
+    confidence: string;
+    published: string;
+    affected: number;
+  }>('SELECT * FROM laws ORDER BY created_at DESC');
 
-// Initialize history file if it doesn't exist
-function initHistoryFile() {
-  if (!fs.existsSync(HISTORY_PATH)) {
-    fs.writeFileSync(HISTORY_PATH, JSON.stringify({ history: [] }, null, 2));
-  }
-}
+  const relationships = await executeQuery<{
+    law_id: string;
+    stock_ticker: string;
+    impact_score: number;
+    correlation_confidence: string;
+    notes: string | null;
+  }>('SELECT * FROM law_stock_relationships');
 
-// Read database
-export function readDatabase(): Database {
-  try {
-    const data = fs.readFileSync(DB_PATH, 'utf-8');
-    return JSON.parse(data);
-  } catch (error) {
-    console.error('Error reading database:', error);
-    return { DATA: {} };
-  }
-}
+  const stocks = await executeQuery<{
+    ticker: string;
+    company_name: string;
+    sector: string;
+  }>('SELECT ticker, company_name, sector FROM stocks');
 
-// Write database
-export function writeDatabase(db: Database): void {
-  try {
-    fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
-  } catch (error) {
-    console.error('Error writing database:', error);
-    throw error;
-  }
-}
+  const stockMap = new Map(stocks.map(s => [s.ticker, s]));
+  const relationshipsByLaw = new Map<string, typeof relationships>();
+  relationships.forEach(rel => {
+    if (!relationshipsByLaw.has(rel.law_id)) {
+      relationshipsByLaw.set(rel.law_id, []);
+    }
+    relationshipsByLaw.get(rel.law_id)!.push(rel);
+  });
 
-// Add update history
-export function addHistory(history: UpdateHistory): void {
-  initHistoryFile();
-  try {
-    const data = fs.readFileSync(HISTORY_PATH, 'utf-8');
-    const historyData = JSON.parse(data);
-    historyData.history.push(history);
-    fs.writeFileSync(HISTORY_PATH, JSON.stringify(historyData, null, 2));
-  } catch (error) {
-    console.error('Error writing history:', error);
-  }
-}
+  const result: { [lawId: string]: Law } = {};
+  
+  laws.forEach(law => {
+    const lawRelationships = relationshipsByLaw.get(law.id) || [];
+    const stocks_impacted: StockImpacted[] = lawRelationships.map(rel => {
+      const stock = stockMap.get(rel.stock_ticker);
+      return {
+        ticker: rel.stock_ticker,
+        company_name: stock?.company_name || '',
+        sector: stock?.sector || law.sector,
+        impact_score: rel.impact_score,
+        correlation_confidence: rel.correlation_confidence,
+        notes: rel.notes || ''
+      };
+    });
 
-// Get all laws
-export function getAllLaws(): Database {
-  return readDatabase();
+    result[law.id] = {
+      jurisdiction: law.jurisdiction,
+      status: law.status,
+      sector: law.sector,
+      impact: law.impact,
+      confidence: law.confidence,
+      published: law.published,
+      affected: law.affected,
+      stocks_impacted: {
+        STOCK_IMPACTED: stocks_impacted
+      }
+    };
+  });
+
+  console.log(`✓ Retrieved ${laws.length} laws from Aurora DSQL`);
+  return result;
 }
 
 // Get law by ID
-export function getLawById(lawId: string): Law | null {
-  const db = readDatabase();
-  return db.DATA[lawId] || null;
+export async function getLawById(lawId: string): Promise<Law | null> {
+  console.log(`📖 Fetching law ${lawId} from Aurora DSQL...`);
+  
+  const laws = await executeQuery<{
+    id: string;
+    jurisdiction: string;
+    status: string;
+    sector: string;
+    impact: number;
+    confidence: string;
+    published: string;
+    affected: number;
+  }>('SELECT * FROM laws WHERE id = $1', [lawId]);
+
+  if (laws.length === 0) {
+    console.log(`✗ Law ${lawId} not found`);
+    return null;
+  }
+
+  const law = laws[0];
+
+  const relationships = await executeQuery<{
+    law_id: string;
+    stock_ticker: string;
+    impact_score: number;
+    correlation_confidence: string;
+    notes: string | null;
+  }>('SELECT * FROM law_stock_relationships WHERE law_id = $1', [lawId]);
+
+  const tickers = relationships.map(r => r.stock_ticker);
+  const stocks = tickers.length > 0
+    ? await executeQuery<{
+        ticker: string;
+        company_name: string;
+        sector: string;
+      }>(`SELECT ticker, company_name, sector FROM stocks WHERE ticker = ANY($1::text[])`, [tickers])
+    : [];
+
+  const stockMap = new Map(stocks.map(s => [s.ticker, s]));
+
+  const stocks_impacted: StockImpacted[] = relationships.map(rel => {
+    const stock = stockMap.get(rel.stock_ticker);
+    return {
+      ticker: rel.stock_ticker,
+      company_name: stock?.company_name || '',
+      sector: stock?.sector || law.sector,
+      impact_score: rel.impact_score,
+      correlation_confidence: rel.correlation_confidence,
+      notes: rel.notes || ''
+    };
+  });
+
+  console.log(`✓ Retrieved law ${lawId} with ${stocks_impacted.length} stocks`);
+  
+  return {
+    jurisdiction: law.jurisdiction,
+    status: law.status,
+    sector: law.sector,
+    impact: law.impact,
+    confidence: law.confidence,
+    published: law.published,
+    affected: law.affected,
+    stocks_impacted: {
+      STOCK_IMPACTED: stocks_impacted
+    }
+  };
 }
 
 // Create new law
-export function createLaw(lawId: string, law: Law): Law {
-  const db = readDatabase();
+export async function createLaw(lawId: string, law: Law): Promise<Law> {
+  console.log(`➕ Creating law ${lawId} in Aurora DSQL...`);
   
-  // Validate relationships
-  validateLawRelationships(law);
-  
-  db.DATA[lawId] = law;
-  writeDatabase(db);
-  
-  addHistory({
-    timestamp: new Date().toISOString(),
-    lawId,
-    changes: ['Created new law'],
-    notes: `Created law ${lawId} in ${law.sector} sector`
-  });
-  
+  await executeQuery(
+    `INSERT INTO laws (id, jurisdiction, status, sector, impact, confidence, published, affected, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+    [lawId, law.jurisdiction, law.status, law.sector, law.impact, law.confidence, law.published, 0]
+  );
+
+  console.log(`✓ Law ${lawId} created successfully`);
   return law;
 }
 
 // Update law
-export function updateLaw(lawId: string, updates: Partial<Law>): Law | null {
-  const db = readDatabase();
+export async function updateLaw(lawId: string, updates: Partial<Law>): Promise<Law | null> {
+  console.log(`📝 Updating law ${lawId} in Aurora DSQL...`);
   
-  if (!db.DATA[lawId]) {
+  const existingLaw = await getLawById(lawId);
+  if (!existingLaw) {
     return null;
   }
-  
-  const oldLaw = { ...db.DATA[lawId] };
-  const updatedLaw = { ...db.DATA[lawId], ...updates };
-  
-  // Re-validate relationships
-  validateLawRelationships(updatedLaw);
-  
-  db.DATA[lawId] = updatedLaw;
-  writeDatabase(db);
-  
-  const changes = Object.keys(updates).filter(key => 
-    JSON.stringify(oldLaw[key as keyof Law]) !== JSON.stringify(updates[key as keyof Law])
-  );
-  
-  addHistory({
-    timestamp: new Date().toISOString(),
-    lawId,
-    changes,
-    notes: `Updated law ${lawId}`
-  });
-  
-  return updatedLaw;
+
+  const fields: string[] = [];
+  const values: any[] = [];
+  let paramIndex = 1;
+
+  if (updates.jurisdiction !== undefined) {
+    fields.push(`jurisdiction = $${paramIndex++}`);
+    values.push(updates.jurisdiction);
+  }
+  if (updates.status !== undefined) {
+    fields.push(`status = $${paramIndex++}`);
+    values.push(updates.status);
+  }
+  if (updates.sector !== undefined) {
+    fields.push(`sector = $${paramIndex++}`);
+    values.push(updates.sector);
+  }
+  if (updates.impact !== undefined) {
+    fields.push(`impact = $${paramIndex++}`);
+    values.push(updates.impact);
+  }
+  if (updates.confidence !== undefined) {
+    fields.push(`confidence = $${paramIndex++}`);
+    values.push(updates.confidence);
+  }
+  if (updates.published !== undefined) {
+    fields.push(`published = $${paramIndex++}`);
+    values.push(updates.published);
+  }
+
+  fields.push(`updated_at = CURRENT_TIMESTAMP`);
+  values.push(lawId);
+
+  if (fields.length > 1) {
+    await executeQuery(
+      `UPDATE laws SET ${fields.join(', ')} WHERE id = $${paramIndex}`,
+      values
+    );
+  }
+
+  console.log(`✓ Law ${lawId} updated successfully`);
+  return await getLawById(lawId);
 }
 
 // Delete law
-export function deleteLaw(lawId: string): boolean {
-  const db = readDatabase();
+export async function deleteLaw(lawId: string): Promise<boolean> {
+  console.log(`🗑️ Deleting law ${lawId} from Aurora DSQL...`);
   
-  if (!db.DATA[lawId]) {
+  const existingLaw = await getLawById(lawId);
+  if (!existingLaw) {
     return false;
   }
+
+  // Delete relationships first
+  await executeQuery('DELETE FROM law_stock_relationships WHERE law_id = $1', [lawId]);
+  await executeQuery('DELETE FROM laws WHERE id = $1', [lawId]);
   
-  delete db.DATA[lawId];
-  writeDatabase(db);
-  
-  addHistory({
-    timestamp: new Date().toISOString(),
-    lawId,
-    changes: ['Deleted law'],
-    notes: `Deleted law ${lawId}`
-  });
-  
+  console.log(`✓ Law ${lawId} deleted successfully`);
   return true;
 }
 
 // Add stock to law
-export function addStockToLaw(lawId: string, stock: StockImpacted): Law | null {
-  const db = readDatabase();
+export async function addStockToLaw(lawId: string, stock: StockImpacted): Promise<Law | null> {
+  console.log(`📈 Adding stock ${stock.ticker} to law ${lawId}...`);
   
-  if (!db.DATA[lawId]) {
+  const law = await getLawById(lawId);
+  if (!law) {
     return null;
   }
-  
-  const law = db.DATA[lawId];
-  
-  // Ensure stock sector matches law sector
-  if (stock.sector !== law.sector) {
-    stock.sector = law.sector;
+
+  // Check if stock exists
+  const existingStocks = await executeQuery<{ ticker: string }>(
+    'SELECT ticker FROM stocks WHERE ticker = $1',
+    [stock.ticker]
+  );
+
+  if (existingStocks.length > 0) {
+    await executeQuery(
+      'UPDATE stocks SET company_name = $1, sector = $2, updated_at = CURRENT_TIMESTAMP WHERE ticker = $3',
+      [stock.company_name, law.sector, stock.ticker]
+    );
+  } else {
+    await executeQuery(
+      'INSERT INTO stocks (ticker, company_name, sector, created_at, updated_at) VALUES ($1, $2, $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
+      [stock.ticker, stock.company_name, law.sector]
+    );
   }
-  
-  law.stocks_impacted.STOCK_IMPACTED.push(stock);
-  
-  // Update affected count
-  law.affected = law.stocks_impacted.STOCK_IMPACTED.length;
-  
-  // Recalculate impact based on average stock impact
-  const avgImpact = law.stocks_impacted.STOCK_IMPACTED.reduce(
-    (sum, s) => sum + s.impact_score, 0
-  ) / law.stocks_impacted.STOCK_IMPACTED.length;
-  
-  law.impact = Math.round(avgImpact);
-  
-  writeDatabase(db);
-  
-  addHistory({
-    timestamp: new Date().toISOString(),
-    lawId,
-    changes: [`Added stock ${stock.ticker}`],
-    notes: `Added ${stock.company_name} to law ${lawId}`
-  });
-  
-  return law;
+
+  // Check if relationship exists
+  const existingRel = await executeQuery<{ law_id: string }>(
+    'SELECT law_id FROM law_stock_relationships WHERE law_id = $1 AND stock_ticker = $2',
+    [lawId, stock.ticker]
+  );
+
+  if (existingRel.length > 0) {
+    await executeQuery(
+      'UPDATE law_stock_relationships SET impact_score = $1, correlation_confidence = $2, notes = $3, updated_at = CURRENT_TIMESTAMP WHERE law_id = $4 AND stock_ticker = $5',
+      [stock.impact_score, stock.correlation_confidence, stock.notes || '', lawId, stock.ticker]
+    );
+  } else {
+    await executeQuery(
+      'INSERT INTO law_stock_relationships (law_id, stock_ticker, impact_score, correlation_confidence, notes, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
+      [lawId, stock.ticker, stock.impact_score, stock.correlation_confidence, stock.notes || '']
+    );
+  }
+
+  // Update affected count and impact
+  await recalculateLawMetrics(lawId);
+
+  console.log(`✓ Stock ${stock.ticker} added to law ${lawId}`);
+  return await getLawById(lawId);
 }
 
 // Update stock in law
-export function updateStockInLaw(
+export async function updateStockInLaw(
   lawId: string,
   ticker: string,
   updates: Partial<StockImpacted>
-): Law | null {
-  const db = readDatabase();
+): Promise<Law | null> {
+  console.log(`📝 Updating stock ${ticker} in law ${lawId}...`);
   
-  if (!db.DATA[lawId]) {
+  const law = await getLawById(lawId);
+  if (!law) {
     return null;
   }
-  
-  const law = db.DATA[lawId];
-  const stockIndex = law.stocks_impacted.STOCK_IMPACTED.findIndex(
-    s => s.ticker === ticker
-  );
-  
-  if (stockIndex === -1) {
-    return null;
+
+  const fields: string[] = [];
+  const values: any[] = [];
+  let paramIndex = 1;
+
+  if (updates.impact_score !== undefined) {
+    fields.push(`impact_score = $${paramIndex++}`);
+    values.push(updates.impact_score);
   }
+  if (updates.correlation_confidence !== undefined) {
+    fields.push(`correlation_confidence = $${paramIndex++}`);
+    values.push(updates.correlation_confidence);
+  }
+  if (updates.notes !== undefined) {
+    fields.push(`notes = $${paramIndex++}`);
+    values.push(updates.notes);
+  }
+
+  fields.push(`updated_at = CURRENT_TIMESTAMP`);
+  values.push(lawId, ticker);
+
+  if (fields.length > 1) {
+    await executeQuery(
+      `UPDATE law_stock_relationships SET ${fields.join(', ')}
+       WHERE law_id = $${paramIndex - 1} AND stock_ticker = $${paramIndex}`,
+      values
+    );
+  }
+
+  if (updates.company_name !== undefined) {
+    await executeQuery(
+      'UPDATE stocks SET company_name = $1, updated_at = CURRENT_TIMESTAMP WHERE ticker = $2',
+      [updates.company_name, ticker]
+    );
+  }
+
+  await recalculateLawMetrics(lawId);
   
-  law.stocks_impacted.STOCK_IMPACTED[stockIndex] = {
-    ...law.stocks_impacted.STOCK_IMPACTED[stockIndex],
-    ...updates
-  };
-  
-  // Recalculate impact
-  const avgImpact = law.stocks_impacted.STOCK_IMPACTED.reduce(
-    (sum, s) => sum + s.impact_score, 0
-  ) / law.stocks_impacted.STOCK_IMPACTED.length;
-  
-  law.impact = Math.round(avgImpact);
-  
-  writeDatabase(db);
-  
-  addHistory({
-    timestamp: new Date().toISOString(),
-    lawId,
-    changes: [`Updated stock ${ticker}`],
-    notes: `Updated stock ${ticker} in law ${lawId}`
-  });
-  
-  return law;
+  console.log(`✓ Stock ${ticker} updated in law ${lawId}`);
+  return await getLawById(lawId);
 }
 
 // Remove stock from law
-export function removeStockFromLaw(lawId: string, ticker: string): Law | null {
-  const db = readDatabase();
+export async function removeStockFromLaw(lawId: string, ticker: string): Promise<Law | null> {
+  console.log(`➖ Removing stock ${ticker} from law ${lawId}...`);
   
-  if (!db.DATA[lawId]) {
+  const law = await getLawById(lawId);
+  if (!law) {
     return null;
   }
-  
-  const law = db.DATA[lawId];
-  law.stocks_impacted.STOCK_IMPACTED = law.stocks_impacted.STOCK_IMPACTED.filter(
-    s => s.ticker !== ticker
+
+  await executeQuery(
+    'DELETE FROM law_stock_relationships WHERE law_id = $1 AND stock_ticker = $2',
+    [lawId, ticker]
   );
+
+  await recalculateLawMetrics(lawId);
   
-  law.affected = law.stocks_impacted.STOCK_IMPACTED.length;
-  
-  // Recalculate impact
-  if (law.stocks_impacted.STOCK_IMPACTED.length > 0) {
-    const avgImpact = law.stocks_impacted.STOCK_IMPACTED.reduce(
-      (sum, s) => sum + s.impact_score, 0
-    ) / law.stocks_impacted.STOCK_IMPACTED.length;
-    law.impact = Math.round(avgImpact);
-  } else {
-    law.impact = 0;
-  }
-  
-  writeDatabase(db);
-  
-  addHistory({
-    timestamp: new Date().toISOString(),
-    lawId,
-    changes: [`Removed stock ${ticker}`],
-    notes: `Removed stock ${ticker} from law ${lawId}`
-  });
-  
-  return law;
+  console.log(`✓ Stock ${ticker} removed from law ${lawId}`);
+  return await getLawById(lawId);
 }
 
 // Get all stocks for a sector
-export function getStocksBySector(sector: string): StockImpacted[] {
-  const db = readDatabase();
-  const stocks: StockImpacted[] = [];
+export async function getStocksBySector(sector: string): Promise<StockImpacted[]> {
+  console.log(`🏢 Fetching stocks for sector: ${sector}...`);
   
-  Object.values(db.DATA).forEach(law => {
-    if (law.sector === sector) {
-      stocks.push(...law.stocks_impacted.STOCK_IMPACTED);
+  const stocks = await executeQuery<{
+    ticker: string;
+    company_name: string;
+    sector: string;
+  }>('SELECT ticker, company_name, sector FROM stocks WHERE sector = $1', [sector]);
+
+  const tickers = stocks.map(s => s.ticker);
+  const relationships = tickers.length > 0
+    ? await executeQuery<{
+        stock_ticker: string;
+        impact_score: number;
+        correlation_confidence: string;
+        notes: string | null;
+      }>(`SELECT stock_ticker, impact_score, correlation_confidence, notes
+          FROM law_stock_relationships
+          WHERE stock_ticker = ANY($1::text[])
+          ORDER BY impact_score DESC`,
+      [tickers])
+    : [];
+
+  const relMap = new Map<string, typeof relationships[0]>();
+  relationships.forEach(rel => {
+    const existing = relMap.get(rel.stock_ticker);
+    if (!existing || rel.impact_score > existing.impact_score) {
+      relMap.set(rel.stock_ticker, rel);
     }
   });
-  
-  // Deduplicate by ticker
-  const uniqueStocks = new Map<string, StockImpacted>();
-  stocks.forEach(stock => {
-    if (!uniqueStocks.has(stock.ticker)) {
-      uniqueStocks.set(stock.ticker, stock);
-    }
+
+  return stocks.map(stock => {
+    const rel = relMap.get(stock.ticker);
+    return {
+      ticker: stock.ticker,
+      company_name: stock.company_name,
+      sector: stock.sector,
+      impact_score: rel?.impact_score || 0,
+      correlation_confidence: rel?.correlation_confidence || 'Medium',
+      notes: rel?.notes || ''
+    };
   });
-  
-  return Array.from(uniqueStocks.values());
 }
 
 // Get all sectors
-export function getAllSectors(): string[] {
-  const db = readDatabase();
-  const sectors = new Set<string>();
+export async function getAllSectors(): Promise<string[]> {
+  console.log('🏢 Fetching all sectors from Aurora DSQL...');
   
-  Object.values(db.DATA).forEach(law => {
-    sectors.add(law.sector);
-  });
+  const result = await executeQuery<{ sector: string }>(
+    'SELECT DISTINCT sector FROM laws UNION SELECT DISTINCT sector FROM stocks ORDER BY sector'
+  );
   
-  return Array.from(sectors);
+  console.log(`✓ Retrieved ${result.length} sectors`);
+  return result.map(r => r.sector);
 }
 
 // Calculate analytics
-export function calculateAnalytics(): Analytics {
-  const db = readDatabase();
-  const laws = Object.values(db.DATA);
+export async function calculateAnalytics(): Promise<Analytics> {
+  console.log('📊 Calculating analytics from Aurora DSQL...');
   
-  const totalLaws = laws.length;
-  
-  // Average impact by sector
-  const sectorImpacts: { [sector: string]: number[] } = {};
-  laws.forEach(law => {
-    if (!sectorImpacts[law.sector]) {
-      sectorImpacts[law.sector] = [];
-    }
-    sectorImpacts[law.sector].push(law.impact);
-  });
-  
+  const totalLawsResult = await executeQuery<{ count: string }>('SELECT COUNT(*) as count FROM laws');
+  const totalLaws = parseInt(totalLawsResult[0]?.count || '0', 10);
+
+  const sectorImpacts = await executeQuery<{
+    sector: string;
+    average_impact: string;
+  }>('SELECT sector, AVG(impact) as average_impact FROM laws GROUP BY sector');
+
   const averageImpactBySector: { [sector: string]: number } = {};
-  Object.keys(sectorImpacts).forEach(sector => {
-    const impacts = sectorImpacts[sector];
-    averageImpactBySector[sector] = impacts.reduce((a, b) => a + b, 0) / impacts.length;
+  sectorImpacts.forEach(row => {
+    averageImpactBySector[row.sector] = parseFloat(row.average_impact);
   });
-  
-  // SP500 affected percentage (assuming 500 stocks total)
-  const uniqueStocks = new Set<string>();
-  laws.forEach(law => {
-    law.stocks_impacted.STOCK_IMPACTED.forEach(stock => {
-      uniqueStocks.add(stock.ticker);
-    });
-  });
-  
-  const sp500AffectedPercentage = (uniqueStocks.size / 500) * 100;
-  
-  // Confidence-weighted impact
-  const confidenceWeights: { [key: string]: number } = {
-    'High': 1.0,
-    'Medium': 0.7,
-    'Low': 0.4
-  };
-  
-  let totalWeightedImpact = 0;
-  let totalWeight = 0;
-  
-  laws.forEach(law => {
-    const weight = confidenceWeights[law.confidence] || 0.5;
-    totalWeightedImpact += law.impact * weight;
-    totalWeight += weight;
-  });
-  
-  const confidenceWeightedImpact = totalWeight > 0 ? totalWeightedImpact / totalWeight : 0;
-  
+
+  const uniqueStocksResult = await executeQuery<{ count: string }>(
+    'SELECT COUNT(DISTINCT stock_ticker) as count FROM law_stock_relationships'
+  );
+  const totalStocksImpacted = parseInt(uniqueStocksResult[0]?.count || '0', 10);
+
+  const sp500AffectedPercentage = (totalStocksImpacted / 500) * 100;
+
+  const confidenceWeightedResult = await executeQuery<{
+    confidence_weighted_impact: string;
+  }>(
+    `SELECT AVG(
+      CASE confidence
+        WHEN 'High' THEN impact * 1.0
+        WHEN 'Medium' THEN impact * 0.7
+        WHEN 'Low' THEN impact * 0.4
+        ELSE impact * 0.5
+      END
+    ) as confidence_weighted_impact
+    FROM laws`
+  );
+
+  const confidenceWeightedImpact = parseFloat(
+    confidenceWeightedResult[0]?.confidence_weighted_impact || '0'
+  );
+
+  console.log(`✓ Analytics calculated: ${totalLaws} laws, ${totalStocksImpacted} stocks`);
+
   return {
     totalLaws,
     averageImpactBySector,
     sp500AffectedPercentage,
     confidenceWeightedImpact,
-    totalStocksImpacted: uniqueStocks.size
+    totalStocksImpacted
   };
 }
 
-// Validate law relationships
-function validateLawRelationships(law: Law): void {
-  // Ensure all stocks in law match the law's sector
-  law.stocks_impacted.STOCK_IMPACTED.forEach(stock => {
-    if (stock.sector !== law.sector) {
-      stock.sector = law.sector;
-    }
-  });
-  
-  // Ensure affected count matches stock count
-  law.affected = law.stocks_impacted.STOCK_IMPACTED.length;
-  
-  // Validate impact score range
-  if (law.impact < 0 || law.impact > 10) {
-    throw new Error('Impact score must be between 0 and 10');
-  }
-  
-  // Validate stock impact scores
-  law.stocks_impacted.STOCK_IMPACTED.forEach(stock => {
-    if (stock.impact_score < 0 || stock.impact_score > 10) {
-      throw new Error(`Stock ${stock.ticker} impact score must be between 0 and 10`);
-    }
-  });
+// Recalculate law metrics
+async function recalculateLawMetrics(lawId: string): Promise<void> {
+  const countResult = await executeQuery<{ count: string }>(
+    'SELECT COUNT(*) as count FROM law_stock_relationships WHERE law_id = $1',
+    [lawId]
+  );
+  const affected = parseInt(countResult[0]?.count || '0', 10);
+
+  const impactResult = await executeQuery<{ avg_impact: string | null }>(
+    'SELECT AVG(impact_score) as avg_impact FROM law_stock_relationships WHERE law_id = $1',
+    [lawId]
+  );
+  const avgImpact = impactResult[0]?.avg_impact
+    ? Math.round(parseFloat(impactResult[0].avg_impact))
+    : 0;
+
+  await executeQuery(
+    'UPDATE laws SET affected = $1, impact = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
+    [affected, avgImpact, lawId]
+  );
 }
 
 // Get update history
-export function getHistory(): UpdateHistory[] {
-  initHistoryFile();
+export async function getHistory(): Promise<UpdateHistory[]> {
   try {
-    const data = fs.readFileSync(HISTORY_PATH, 'utf-8');
-    const historyData = JSON.parse(data);
-    return historyData.history || [];
+    const result = await executeQuery<{
+      timestamp: Date;
+      law_id: string;
+      changes: string;
+      notes: string;
+    }>('SELECT timestamp, law_id, changes, notes FROM update_history ORDER BY timestamp DESC LIMIT 100');
+
+    return result.map(row => ({
+      timestamp: row.timestamp.toISOString(),
+      lawId: row.law_id,
+      changes: typeof row.changes === 'string' ? JSON.parse(row.changes) : row.changes,
+      notes: row.notes
+    }));
   } catch (error) {
-    console.error('Error reading history:', error);
+    console.warn('History table not available:', error);
     return [];
   }
 }
-
