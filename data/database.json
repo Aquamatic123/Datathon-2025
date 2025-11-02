@@ -1,5 +1,17 @@
 {
   "DATA": {
+    "2103455": {
+      "jurisdiction": "dwadsadwa",
+      "status": "Pending",
+      "sector": "wdwad",
+      "impact": 9,
+      "confidence": "Medium",
+      "published": "2025-11-02",
+      "affected": 0,
+      "stocks_impacted": {
+        "STOCK_IMPACTED": []
+      }
+    },
     "Law1": {
       "jurisdiction": "United States",
       "status": "Active",
@@ -110,7 +122,18 @@
           }
         ]
       }
+    },
+    "01203": {
+      "jurisdiction": "oadk",
+      "status": "Pending",
+      "sector": "dwadad",
+      "impact": 0,
+      "confidence": "Medium",
+      "published": "2025-11-02",
+      "affected": 0,
+      "stocks_impacted": {
+        "STOCK_IMPACTED": []
+      }
     }
   }
 }
-

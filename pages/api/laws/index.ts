@@ -16,19 +16,19 @@ export default async function handler(
   try {
     if (method === 'GET') {
       if (query.analytics === 'true') {
-        const analytics = calculateAnalytics();
+        const analytics = await calculateAnalytics();
         return res.status(200).json(analytics);
       } else if (query.sectors === 'true') {
-        const sectors = getAllSectors();
+        const sectors = await getAllSectors();
         return res.status(200).json(sectors);
       } else if (query.history === 'true') {
-        const history = getHistory();
+        const history = await getHistory();
         return res.status(200).json(history);
       } else if (query.sector) {
-        const stocks = getStocksBySector(query.sector as string);
+        const stocks = await getStocksBySector(query.sector as string);
         return res.status(200).json(stocks);
       } else {
-        const db = getAllLaws();
+        const db = await getAllLaws();
         return res.status(200).json(db);
       }
     }

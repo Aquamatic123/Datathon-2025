@@ -2,6 +2,19 @@ import { Database, Law, StockImpacted, Analytics, UpdateHistory } from '@/types'
 import fs from 'fs';
 import path from 'path';
 
+// Use SQL database if DATABASE_URL is set, otherwise fallback to JSON
+const USE_SQL = !!process.env.DATABASE_URL || !!process.env.DB_HOST;
+
+// Import SQL functions if using SQL
+let sqlDb: typeof import('./database-sql') | null = null;
+if (USE_SQL) {
+  try {
+    sqlDb = require('./database-sql');
+  } catch (error) {
+    console.warn('⚠️  SQL database not available, falling back to JSON:', error);
+  }
+}
+
 const DB_PATH = path.join(process.cwd(), 'data', 'database.json');
 const HISTORY_PATH = path.join(process.cwd(), 'data', 'history.json');
 
@@ -34,7 +47,11 @@ export function writeDatabase(db: Database): void {
 }
 
 // Add update history
-export function addHistory(history: UpdateHistory): void {
+export async function addHistory(history: UpdateHistory): Promise<void> {
+  if (USE_SQL && sqlDb) {
+    return await sqlDb.addHistory(history);
+  }
+  
   initHistoryFile();
   try {
     const data = fs.readFileSync(HISTORY_PATH, 'utf-8');
@@ -47,18 +64,30 @@ export function addHistory(history: UpdateHistory): void {
 }
 
 // Get all laws
-export function getAllLaws(): Database {
+export async function getAllLaws(): Promise<Database> {
+  if (USE_SQL && sqlDb) {
+    return await sqlDb.getAllLaws();
+  }
   return readDatabase();
 }
 
 // Get law by ID
-export function getLawById(lawId: string): Law | null {
+export async function getLawById(lawId: string): Promise<Law | null> {
+  if (USE_SQL && sqlDb) {
+    return await sqlDb.getLawById(lawId);
+  }
   const db = readDatabase();
   return db.DATA[lawId] || null;
 }
 
 // Create new law
-export function createLaw(lawId: string, law: Law): Law {
+export async function createLaw(lawId: string, law: Law): Promise<Law> {
+  if (USE_SQL && sqlDb) {
+    // Validate relationships
+    validateLawRelationships(law);
+    return await sqlDb.createLaw(lawId, law);
+  }
+  
   const db = readDatabase();
   
   // Validate relationships
@@ -78,7 +107,11 @@ export function createLaw(lawId: string, law: Law): Law {
 }
 
 // Update law
-export function updateLaw(lawId: string, updates: Partial<Law>): Law | null {
+export async function updateLaw(lawId: string, updates: Partial<Law>): Promise<Law | null> {
+  if (USE_SQL && sqlDb) {
+    return await sqlDb.updateLaw(lawId, updates);
+  }
+  
   const db = readDatabase();
   
   if (!db.DATA[lawId]) {
@@ -109,7 +142,11 @@ export function updateLaw(lawId: string, updates: Partial<Law>): Law | null {
 }
 
 // Delete law
-export function deleteLaw(lawId: string): boolean {
+export async function deleteLaw(lawId: string): Promise<boolean> {
+  if (USE_SQL && sqlDb) {
+    return await sqlDb.deleteLaw(lawId);
+  }
+  
   const db = readDatabase();
   
   if (!db.DATA[lawId]) {
@@ -130,7 +167,11 @@ export function deleteLaw(lawId: string): boolean {
 }
 
 // Add stock to law
-export function addStockToLaw(lawId: string, stock: StockImpacted): Law | null {
+export async function addStockToLaw(lawId: string, stock: StockImpacted): Promise<Law | null> {
+  if (USE_SQL && sqlDb) {
+    return await sqlDb.addStockToLaw(lawId, stock);
+  }
+  
   const db = readDatabase();
   
   if (!db.DATA[lawId]) {
@@ -169,11 +210,15 @@ export function addStockToLaw(lawId: string, stock: StockImpacted): Law | null {
 }
 
 // Update stock in law
-export function updateStockInLaw(
+export async function updateStockInLaw(
   lawId: string,
   ticker: string,
   updates: Partial<StockImpacted>
-): Law | null {
+): Promise<Law | null> {
+  if (USE_SQL && sqlDb) {
+    return await sqlDb.updateStockInLaw(lawId, ticker, updates);
+  }
+  
   const db = readDatabase();
   
   if (!db.DATA[lawId]) {
@@ -214,7 +259,11 @@ export function updateStockInLaw(
 }
 
 // Remove stock from law
-export function removeStockFromLaw(lawId: string, ticker: string): Law | null {
+export async function removeStockFromLaw(lawId: string, ticker: string): Promise<Law | null> {
+  if (USE_SQL && sqlDb) {
+    return await sqlDb.removeStockFromLaw(lawId, ticker);
+  }
+  
   const db = readDatabase();
   
   if (!db.DATA[lawId]) {
@@ -251,7 +300,11 @@ export function removeStockFromLaw(lawId: string, ticker: string): Law | null {
 }
 
 // Get all stocks for a sector
-export function getStocksBySector(sector: string): StockImpacted[] {
+export async function getStocksBySector(sector: string): Promise<StockImpacted[]> {
+  if (USE_SQL && sqlDb) {
+    return await sqlDb.getStocksBySector(sector);
+  }
+  
   const db = readDatabase();
   const stocks: StockImpacted[] = [];
   
@@ -273,7 +326,11 @@ export function getStocksBySector(sector: string): StockImpacted[] {
 }
 
 // Get all sectors
-export function getAllSectors(): string[] {
+export async function getAllSectors(): Promise<string[]> {
+  if (USE_SQL && sqlDb) {
+    return await sqlDb.getAllSectors();
+  }
+  
   const db = readDatabase();
   const sectors = new Set<string>();
   
@@ -285,7 +342,11 @@ export function getAllSectors(): string[] {
 }
 
 // Calculate analytics
-export function calculateAnalytics(): Analytics {
+export async function calculateAnalytics(): Promise<Analytics> {
+  if (USE_SQL && sqlDb) {
+    return await sqlDb.calculateAnalytics();
+  }
+  
   const db = readDatabase();
   const laws = Object.values(db.DATA);
   
@@ -369,7 +430,11 @@ function validateLawRelationships(law: Law): void {
 }
 
 // Get update history
-export function getHistory(): UpdateHistory[] {
+export async function getHistory(): Promise<UpdateHistory[]> {
+  if (USE_SQL && sqlDb) {
+    return await sqlDb.getHistory();
+  }
+  
   initHistoryFile();
   try {
     const data = fs.readFileSync(HISTORY_PATH, 'utf-8');

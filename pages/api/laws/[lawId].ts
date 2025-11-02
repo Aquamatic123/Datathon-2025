@@ -26,7 +26,7 @@ export default async function handler(
     switch (method) {
       case 'GET':
         // Get specific law
-        const fetchedLaw = getLawById(lawId);
+        const fetchedLaw = await getLawById(lawId);
         if (!fetchedLaw) {
           return res.status(404).json({ error: 'Law not found' });
         }
@@ -36,7 +36,7 @@ export default async function handler(
         if (ticker && typeof ticker === 'string') {
           // Add stock to law
           const stock = body as StockImpacted;
-          const updatedLaw = addStockToLaw(lawId, stock);
+          const updatedLaw = await addStockToLaw(lawId, stock);
           if (!updatedLaw) {
             return res.status(404).json({ error: 'Law not found' });
           }
@@ -44,14 +44,14 @@ export default async function handler(
         }
         // Create new law
         const newLawData = body as Law;
-        const createdLaw = createLaw(lawId, newLawData);
+        const createdLaw = await createLaw(lawId, newLawData);
         return res.status(201).json(createdLaw);
 
       case 'PUT':
         if (ticker && typeof ticker === 'string') {
           // Update stock in law
           const updates = body as Partial<StockImpacted>;
-          const updatedLaw = updateStockInLaw(lawId, ticker, updates);
+          const updatedLaw = await updateStockInLaw(lawId, ticker, updates);
           if (!updatedLaw) {
             return res.status(404).json({ error: 'Law or stock not found' });
           }
@@ -59,7 +59,7 @@ export default async function handler(
         } else {
           // Update law
           const updates = body as Partial<Law>;
-          const updatedLaw = updateLaw(lawId, updates);
+          const updatedLaw = await updateLaw(lawId, updates);
           if (!updatedLaw) {
             return res.status(404).json({ error: 'Law not found' });
           }
@@ -69,14 +69,14 @@ export default async function handler(
       case 'DELETE':
         if (ticker && typeof ticker === 'string') {
           // Remove stock from law
-          const updatedLaw = removeStockFromLaw(lawId, ticker);
+          const updatedLaw = await removeStockFromLaw(lawId, ticker);
           if (!updatedLaw) {
             return res.status(404).json({ error: 'Law or stock not found' });
           }
           return res.status(200).json(updatedLaw);
         } else {
           // Delete law
-          const deleted = deleteLaw(lawId);
+          const deleted = await deleteLaw(lawId);
           if (!deleted) {
             return res.status(404).json({ error: 'Law not found' });
           }

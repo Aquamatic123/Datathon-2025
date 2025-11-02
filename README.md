@@ -23,7 +23,7 @@ A professional CRM dashboard for tracking and analyzing the impact of laws and r
 - **Charts**: Recharts
 - **Icons**: Lucide React
 - **Backend**: Next.js API Routes
-- **Database**: JSON file-based mock database (ready for SQL migration)
+- **Database**: PostgreSQL (AWS RDS) with automatic JSON fallback
 
 ## Project Structure
 
@@ -181,14 +181,42 @@ DELETE /api/laws/[lawId]?ticker=[ticker]
 - Stock sectors automatically match their law's sector
 - Affected count automatically matches stock count
 
-## SQL Migration
+## Database Setup
 
-The application is designed for easy migration to SQL. See `docs/SQL_MIGRATION_SCHEMA.md` for:
-- Complete SQL schema
-- Migration scripts
-- Relationship diagrams
-- Useful queries
-- Data consistency triggers
+### PostgreSQL Database (Recommended)
+
+The app now supports PostgreSQL for production use with large LLM-generated datasets.
+
+**Quick Setup with Docker:**
+```bash
+# Start PostgreSQL
+docker-compose up -d postgres
+
+# Run schema
+docker cp scripts/schema.sql $(docker-compose ps -q postgres):/tmp/schema.sql
+docker-compose exec postgres psql -U postgres -d crm_dashboard -f /tmp/schema.sql
+
+# Migrate data
+npm run migrate
+```
+
+**Or install PostgreSQL locally:**
+1. Install PostgreSQL (see `SETUP.md`)
+2. Run `scripts/schema.sql` on your database
+3. Run `npm run migrate` to migrate existing data
+4. Start the app - it automatically uses PostgreSQL!
+
+**See `SETUP.md` for complete setup instructions.**
+
+### JSON Fallback
+
+If no database is configured, the app automatically falls back to JSON files (`data/database.json`). This makes development easy and migration seamless.
+
+### Documentation
+
+- **Quick Start**: `QUICK_START.md` - Simple setup guide
+- **Setup Guide**: `SETUP.md` - Complete setup instructions
+- **SQL Schema**: `docs/SQL_MIGRATION_SCHEMA.md` - Complete database schema reference
 
 ## Usage Examples
 

@@ -8,11 +8,31 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      # Mount data directory for persistence
       - ./data:/app/data
     environment:
       - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=crm_dashboard
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+    depends_on:
+      - postgres
     restart: unless-stopped
 
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: crm_dashboard
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

@@ -1,4 +1,20 @@
 {
-  "history": []
+  "history": [
+    {
+      "timestamp": "2025-11-02T17:04:38.080Z",
+      "lawId": "01203",
+      "changes": [
+        "Created new law"
+      ],
+      "notes": "Created law 01203 in dwadad sector"
+    },
+    {
+      "timestamp": "2025-11-02T17:05:04.755Z",
+      "lawId": "2103455",
+      "changes": [
+        "Created new law"
+      ],
+      "notes": "Created law 2103455 in wdwad sector"
+    }
+  ]
 }
-
