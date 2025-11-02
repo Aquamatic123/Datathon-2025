@@ -15,6 +15,118 @@
         "Created new law"
       ],
       "notes": "Created law 2103455 in wdwad sector"
+    },
+    {
+      "timestamp": "2025-11-02T22:03:14.636Z",
+      "lawId": "undefined",
+      "changes": [
+        "Created new law"
+      ],
+      "notes": "Created law undefined in Technology sector"
+    },
+    {
+      "timestamp": "2025-11-02T22:04:19.502Z",
+      "lawId": "undefined",
+      "changes": [
+        "Created new law"
+      ],
+      "notes": "Created law undefined in Technology sector"
+    },
+    {
+      "timestamp": "2025-11-02T22:08:24.046Z",
+      "lawId": "undefined",
+      "changes": [
+        "Deleted law"
+      ],
+      "notes": "Deleted law undefined"
+    },
+    {
+      "timestamp": "2025-11-02T22:09:13.943Z",
+      "lawId": "EU-2024-1234",
+      "changes": [
+        "Created new law"
+      ],
+      "notes": "Created law EU-2024-1234 in Technology sector"
+    },
+    {
+      "timestamp": "2025-11-02T22:11:25.562Z",
+      "lawId": "01203",
+      "changes": [
+        "Deleted law"
+      ],
+      "notes": "Deleted law 01203"
+    },
+    {
+      "timestamp": "2025-11-02T22:17:39.283Z",
+      "lawId": "LAW-1-DIRECTIVE (UE) 20192161 DU P",
+      "changes": [
+        "Created new law"
+      ],
+      "notes": "Created law LAW-1-DIRECTIVE (UE) 20192161 DU P in General sector"
+    },
+    {
+      "timestamp": "2025-11-02T22:17:53.659Z",
+      "lawId": "LAW-1-DIRECTIVE (UE) 20192161 DU P",
+      "changes": [
+        "Deleted law"
+      ],
+      "notes": "Deleted law LAW-1-DIRECTIVE (UE) 20192161 DU P"
+    },
+    {
+      "timestamp": "2025-11-02T22:18:01.071Z",
+      "lawId": "LAW-1-DIRECTIVE (UE) 20192161 DU P",
+      "changes": [
+        "Created new law"
+      ],
+      "notes": "Created law LAW-1-DIRECTIVE (UE) 20192161 DU P in General sector"
+    },
+    {
+      "timestamp": "2025-11-02T22:21:42.216Z",
+      "lawId": "LAW-1-DIRECTIVE (UE) 20192161 DU P",
+      "changes": [
+        "Deleted law"
+      ],
+      "notes": "Deleted law LAW-1-DIRECTIVE (UE) 20192161 DU P"
+    },
+    {
+      "timestamp": "2025-11-02T22:21:44.524Z",
+      "lawId": "EU-2024-1234",
+      "changes": [
+        "Deleted law"
+      ],
+      "notes": "Deleted law EU-2024-1234"
+    },
+    {
+      "timestamp": "2025-11-02T22:25:54.054Z",
+      "lawId": "LAW-1-DIRECTIVE (UE) 20192161 DU P",
+      "changes": [
+        "Created new law"
+      ],
+      "notes": "Created law LAW-1-DIRECTIVE (UE) 20192161 DU P in General sector"
+    },
+    {
+      "timestamp": "2025-11-02T22:26:05.637Z",
+      "lawId": "LAW-1-DIRECTIVE (UE) 20192161 DU P",
+      "changes": [
+        "Created new law"
+      ],
+      "notes": "Created law LAW-1-DIRECTIVE (UE) 20192161 DU P in General sector"
+    },
+    {
+      "timestamp": "2025-11-02T22:26:36.402Z",
+      "lawId": "LAW-1-DIRECTIVE (UE) 20192161 DU P",
+      "changes": [
+        "Created new law"
+      ],
+      "notes": "Created law LAW-1-DIRECTIVE (UE) 20192161 DU P in General sector"
+    },
+    {
+      "timestamp": "2025-11-02T22:29:07.040Z",
+      "lawId": "LAW-1-DIRECTIVE (UE) 20192161 DU P",
+      "changes": [
+        "Deleted law"
+      ],
+      "notes": "Deleted law LAW-1-DIRECTIVE (UE) 20192161 DU P"
     }
   ]
 }

@@ -65,10 +65,19 @@ def analyze_document():
         print(f"Extracted {len(extracted_text)} characters ({result['word_count']} words)")
         
         # Step 2: Parse the directive using SageMaker LLM
-        print(f"Parsing directive with SageMaker LLM...")
+        print(f"📊 Parsing directive with SageMaker LLM...")
+        print(f"   Text length: {len(extracted_text)} chars")
+        print(f"   Content type: {content_type}")
+        
         law_data = sagemaker_parser.parse_directive(extracted_text, filename)
         
-        print(f"Successfully parsed law: {law_data.get('lawId')}")
+        # Check if fallback was used
+        if law_data.get('status') == 'Pending Review':
+            print(f"⚠️  FALLBACK USED - SageMaker failed, basic parsing applied")
+        else:
+            print(f"✅ SageMaker SUCCESS - AI analysis complete")
+        
+        print(f"📋 Parsed law: {law_data.get('lawId')} (Status: {law_data.get('status')})")
         
         # Step 3: Attach the document to the law data
         law_data['document'] = {

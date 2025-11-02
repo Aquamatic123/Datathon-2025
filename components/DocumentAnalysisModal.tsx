@@ -45,15 +45,16 @@ export default function DocumentAnalysisModal({ onClose, onAnalysisComplete }: D
 
   const handleFileSelection = (selectedFile: File) => {
     // Validate file type
-    const validTypes = ['text/html', 'application/pdf', 'text/plain', 
+    const validTypes = ['text/html', 'text/xml', 'application/xml', 'application/xhtml+xml',
+                       'application/pdf', 'text/plain', 
                        'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    const validExtensions = ['.html', '.htm', '.pdf', '.txt', '.doc', '.docx'];
+    const validExtensions = ['.html', '.htm', '.xml', '.pdf', '.txt', '.doc', '.docx'];
     
     const isValidType = validTypes.includes(selectedFile.type) || 
                        validExtensions.some(ext => selectedFile.name.toLowerCase().endsWith(ext));
     
     if (!isValidType) {
-      setError('Please upload a valid document file (HTML, PDF, TXT, DOC, DOCX)');
+      setError('Please upload a valid document file (HTML, XML, PDF, TXT, DOC, DOCX)');
       return;
     }
 
@@ -162,7 +163,7 @@ export default function DocumentAnalysisModal({ onClose, onAnalysisComplete }: D
                 id="document-upload-analysis"
                 className="hidden"
                 onChange={handleChange}
-                accept=".html,.htm,.pdf,.txt,.doc,.docx"
+                accept=".html,.htm,.xml,.pdf,.txt,.doc,.docx"
               />
               
               <label
@@ -179,8 +180,8 @@ export default function DocumentAnalysisModal({ onClose, onAnalysisComplete }: D
                   <p className="text-sm text-gray-600 mt-2">
                     or click to browse files
                   </p>
-                  <p className="text-xs text-gray-500 mt-3">
-                    Supported formats: HTML, PDF, TXT, DOC, DOCX (max 10MB)
+                  <p className="text-xs text-gray-500 mt-1">
+                    Supported formats: HTML, XML, PDF, TXT, DOC, DOCX (max 10MB)
                   </p>
                 </div>
               </label>

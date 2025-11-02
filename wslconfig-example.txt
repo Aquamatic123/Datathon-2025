@@ -1,0 +1,16 @@
+# WSL Memory Configuration
+# Place this file at: C:\Users\<YourUsername>\.wslconfig (on Windows)
+# Then restart WSL: wsl --shutdown
+
+[wsl2]
+# Limit memory to prevent crashes (adjust based on your system)
+memory=4GB
+
+# Limit processors
+processors=2
+
+# Swap file size
+swap=2GB
+
+# How much RAM can swap file use (as percentage)
+swapfile=C:\\temp\\wsl-swap.vhdx

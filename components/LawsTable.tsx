@@ -11,6 +11,7 @@ interface LawsTableProps {
 export default function LawsTable({ database, onUpdate }: LawsTableProps) {
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [clearingAll, setClearingAll] = useState(false);
 
   const handleDelete = async (lawId: string) => {
     if (!confirm('Are you sure you want to delete this law?')) {
@@ -34,6 +35,34 @@ export default function LawsTable({ database, onUpdate }: LawsTableProps) {
       alert('Error deleting law');
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleClearAll = async () => {
+    const lawCount = Object.keys(database.DATA).length;
+    if (lawCount === 0) {
+      alert('No laws to delete');
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete all ${lawCount} laws? This cannot be undone.`)) {
+      return;
+    }
+
+    setClearingAll(true);
+    try {
+      const lawIds = Object.keys(database.DATA);
+      const deletePromises = lawIds.map(lawId => 
+        fetch(`/api/laws/${encodeURIComponent(lawId)}`, { method: 'DELETE' })
+      );
+
+      await Promise.all(deletePromises);
+      onUpdate();
+    } catch (error) {
+      console.error('Error clearing all laws:', error);
+      alert('Error clearing all laws');
+    } finally {
+      setClearingAll(false);
     }
   };
 
@@ -67,8 +96,18 @@ export default function LawsTable({ database, onUpdate }: LawsTableProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
         <h2 className="text-xl font-semibold text-gray-900">Laws & Regulations</h2>
+        {laws.length > 0 && (
+          <button
+            onClick={handleClearAll}
+            disabled={clearingAll}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+          >
+            <Trash2 className="h-4 w-4" />
+            {clearingAll ? 'Clearing...' : 'Clear All'}
+          </button>
+        )}
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">

@@ -21,7 +21,7 @@ class DocumentProcessor:
         
         Args:
             content: Raw bytes of the document
-            content_type: MIME type (e.g., 'text/html', 'application/pdf')
+            content_type: MIME type (e.g., 'text/html', 'application/pdf', 'text/xml')
             filename: Original filename
             
         Returns:
@@ -33,6 +33,8 @@ class DocumentProcessor:
         # Route to appropriate processor
         if content_type == 'text/html' or file_extension in ['html', 'htm']:
             text = DocumentProcessor._process_html(content)
+        elif content_type in ['text/xml', 'application/xml', 'application/xhtml+xml'] or file_extension == 'xml':
+            text = DocumentProcessor._process_xml(content)
         elif content_type == 'application/pdf' or file_extension == 'pdf':
             text = DocumentProcessor._process_pdf(content)
         elif content_type in ['application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -95,6 +97,51 @@ class DocumentProcessor:
             
         except Exception as e:
             raise ValueError(f"Error processing HTML: {str(e)}")
+    
+    @staticmethod
+    def _process_xml(content: bytes) -> str:
+        """
+        Extract text from XML content
+        Similar to HTML processing but handles XML-specific structures
+        """
+        try:
+            # Decode XML content
+            xml_str = content.decode('utf-8')
+            
+            # Use lxml parser for XML
+            parser = 'lxml-xml'
+            try:
+                import lxml
+                parser = 'lxml-xml'
+            except ImportError:
+                parser = 'xml'
+            
+            # Parse with BeautifulSoup
+            soup = BeautifulSoup(xml_str, parser)
+            
+            # Remove script and style elements (if any)
+            for script in soup(['script', 'style']):
+                script.decompose()
+            
+            # Extract text
+            plain_text = soup.get_text()
+            
+            # Decode XML entities
+            import html
+            plain_text = html.unescape(plain_text)
+            
+            # Post-conversion cleaning
+            # Remove excess whitespace and newlines
+            import re
+            plain_text = re.sub(r'(\n\s*)+\n', '\n\n', plain_text).strip()
+            
+            # Additional cleanup: remove multiple spaces
+            plain_text = re.sub(r' +', ' ', plain_text)
+            
+            return plain_text
+            
+        except Exception as e:
+            raise ValueError(f"Error processing XML: {str(e)}")
     
     @staticmethod
     def _process_pdf(content: bytes) -> str:
