@@ -237,7 +237,7 @@ export default function LawDetailsPage() {
                         onChange={(e) =>
                           setEditedLaw({ ...editedLaw, jurisdiction: e.target.value })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
                       />
                     ) : (
                       law.jurisdiction
@@ -255,7 +255,7 @@ export default function LawDetailsPage() {
                         onChange={(e) =>
                           setEditedLaw({ ...editedLaw, status: e.target.value })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
                       >
                         <option>Active</option>
                         <option>Pending</option>
@@ -284,7 +284,7 @@ export default function LawDetailsPage() {
                         onChange={(e) =>
                           setEditedLaw({ ...editedLaw, sector: e.target.value })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
                       />
                     ) : (
                       law.sector
@@ -305,7 +305,7 @@ export default function LawDetailsPage() {
                         onChange={(e) =>
                           setEditedLaw({ ...editedLaw, impact: parseInt(e.target.value) })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
                       />
                     ) : (
                       <div className="flex items-center">
@@ -331,7 +331,7 @@ export default function LawDetailsPage() {
                         onChange={(e) =>
                           setEditedLaw({ ...editedLaw, confidence: e.target.value })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
                       >
                         <option>High</option>
                         <option>Medium</option>
@@ -360,7 +360,7 @@ export default function LawDetailsPage() {
                         onChange={(e) =>
                           setEditedLaw({ ...editedLaw, published: e.target.value })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
                       />
                     ) : (
                       new Date(law.published).toLocaleDateString()
@@ -409,7 +409,7 @@ export default function LawDetailsPage() {
                     onChange={(e) =>
                       setNewStock({ ...newStock, ticker: e.target.value.toUpperCase() })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900"
                   />
                 </div>
                 <div>
@@ -423,7 +423,7 @@ export default function LawDetailsPage() {
                     onChange={(e) =>
                       setNewStock({ ...newStock, company_name: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900"
                   />
                 </div>
                 <div>
@@ -436,7 +436,7 @@ export default function LawDetailsPage() {
                     onChange={(e) =>
                       setNewStock({ ...newStock, sector: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900"
                   />
                 </div>
                 <div>
@@ -451,7 +451,7 @@ export default function LawDetailsPage() {
                     onChange={(e) =>
                       setNewStock({ ...newStock, impact_score: parseInt(e.target.value) })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900"
                   />
                 </div>
                 <div>
@@ -463,7 +463,7 @@ export default function LawDetailsPage() {
                     onChange={(e) =>
                       setNewStock({ ...newStock, correlation_confidence: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900"
                   >
                     <option>High</option>
                     <option>Medium</option>
@@ -480,7 +480,7 @@ export default function LawDetailsPage() {
                     onChange={(e) =>
                       setNewStock({ ...newStock, notes: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900"
                     rows={2}
                   />
                 </div>

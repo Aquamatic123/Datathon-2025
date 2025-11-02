@@ -70,7 +70,7 @@ export default function AddLawModal({ onClose, onSave }: AddLawModalProps) {
                 type="text"
                 value={lawId}
                 onChange={(e) => setLawId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
                 required
               />
             </div>
@@ -86,7 +86,7 @@ export default function AddLawModal({ onClose, onSave }: AddLawModalProps) {
                   onChange={(e) =>
                     setLaw({ ...law, jurisdiction: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
                   required
                 />
               </div>
@@ -97,7 +97,7 @@ export default function AddLawModal({ onClose, onSave }: AddLawModalProps) {
                 <select
                   value={law.status}
                   onChange={(e) => setLaw({ ...law, status: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
                   required
                 >
                   <option>Active</option>
@@ -113,7 +113,7 @@ export default function AddLawModal({ onClose, onSave }: AddLawModalProps) {
                   type="text"
                   value={law.sector}
                   onChange={(e) => setLaw({ ...law, sector: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
                   required
                 />
               </div>
@@ -129,7 +129,7 @@ export default function AddLawModal({ onClose, onSave }: AddLawModalProps) {
                   onChange={(e) =>
                     setLaw({ ...law, impact: parseInt(e.target.value) })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
                   required
                 />
               </div>
@@ -140,7 +140,7 @@ export default function AddLawModal({ onClose, onSave }: AddLawModalProps) {
                 <select
                   value={law.confidence}
                   onChange={(e) => setLaw({ ...law, confidence: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
                   required
                 >
                   <option>High</option>
@@ -156,7 +156,7 @@ export default function AddLawModal({ onClose, onSave }: AddLawModalProps) {
                   type="date"
                   value={law.published}
                   onChange={(e) => setLaw({ ...law, published: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
                   required
                 />
               </div>
