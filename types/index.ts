@@ -15,6 +15,12 @@ export interface Law {
   confidence: string;
   published: string;
   affected: number;
+  document?: {
+    filename: string;
+    content: string;
+    contentType: string;
+    uploadedAt: string;
+  };
   stocks_impacted: {
     STOCK_IMPACTED: StockImpacted[];
   };

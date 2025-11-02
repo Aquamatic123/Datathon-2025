@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Law, StockImpacted } from '@/types';
-import { X, Edit2, Plus, Trash2 } from 'lucide-react';
+import { X, Edit2, Plus, Trash2, FileText, Download, Eye } from 'lucide-react';
+import DocumentUpload from './DocumentUpload';
+import DocumentViewer from './DocumentViewer';
 
 interface LawDetailsModalProps {
   lawId: string;
@@ -18,6 +20,7 @@ export default function LawDetailsModal({
   const [isEditing, setIsEditing] = useState(false);
   const [editedLaw, setEditedLaw] = useState<Law>(law);
   const [showAddStock, setShowAddStock] = useState(false);
+  const [showDocumentViewer, setShowDocumentViewer] = useState(false);
   const [newStock, setNewStock] = useState<Partial<StockImpacted>>({
     ticker: '',
     company_name: '',
@@ -123,6 +126,16 @@ export default function LawDetailsModal({
         <div className="px-6 py-4">
           {isEditing ? (
             <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Law Document
+                </label>
+                <DocumentUpload
+                  onDocumentUpload={(document) => setEditedLaw({ ...editedLaw, document })}
+                  currentDocument={editedLaw.document}
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -231,6 +244,58 @@ export default function LawDetailsModal({
             </div>
           ) : (
             <div className="space-y-6">
+              {law.document && (
+                <div className="border border-gray-300 rounded-lg p-4 bg-gray-50">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <FileText className="h-5 w-5 text-blue-600 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-gray-900">{law.document.filename}</p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Uploaded: {new Date(law.document.uploadedAt).toLocaleString()}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Size: {(law.document.content.length / 1024).toFixed(2)} KB
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setShowDocumentViewer(true)}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-800"
+                        title="View document"
+                      >
+                        <Eye className="h-4 w-4" />
+                        View
+                      </button>
+                      <button
+                        onClick={() => {
+                          const blob = new Blob([law.document!.content], { type: law.document!.contentType });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = law.document!.filename;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                        }}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-800"
+                        title="Download document"
+                      >
+                        <Download className="h-4 w-4" />
+                        Download
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {showDocumentViewer && law.document && (
+                <DocumentViewer
+                  document={law.document}
+                  onClose={() => setShowDocumentViewer(false)}
+                />
+              )}
+
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="text-sm font-medium text-gray-500">Jurisdiction</label>

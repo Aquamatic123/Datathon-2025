@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Law, StockImpacted } from '@/types';
-import { X } from 'lucide-react';
+import { X, Sparkles } from 'lucide-react';
+import DocumentUpload from './DocumentUpload';
+import DocumentAnalysisModal from './DocumentAnalysisModal';
 
 interface AddLawModalProps {
   onClose: () => void;
@@ -9,6 +11,7 @@ interface AddLawModalProps {
 
 export default function AddLawModal({ onClose, onSave }: AddLawModalProps) {
   const [lawId, setLawId] = useState('');
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const [law, setLaw] = useState<Law>({
     jurisdiction: '',
     status: 'Pending',
@@ -21,6 +24,18 @@ export default function AddLawModal({ onClose, onSave }: AddLawModalProps) {
       STOCK_IMPACTED: [],
     },
   });
+
+  const handleAnalysisComplete = (data: any) => {
+    // Set document from analysis
+    if (data.document) {
+      setLaw({ ...law, document: data.document });
+    }
+    
+    // When backend is ready, it will populate these fields:
+    // setLaw({ ...law, ...data.extractedData });
+    
+    setShowAnalysisModal(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +77,37 @@ export default function AddLawModal({ onClose, onSave }: AddLawModalProps) {
 
         <form onSubmit={handleSubmit} className="px-6 py-4">
           <div className="space-y-4">
+            {/* Quick Upload Option */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="bg-blue-100 p-2 rounded-full">
+                  <Sparkles className="h-5 w-5 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900">Auto-fill from Document</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Upload a law document and let the backend automatically extract all details
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowAnalysisModal(true)}
+                    className="mt-3 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    Upload Document for Analysis
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">or enter manually</span>
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Law ID *
@@ -72,6 +118,16 @@ export default function AddLawModal({ onClose, onSave }: AddLawModalProps) {
                 onChange={(e) => setLawId(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
                 required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Law Document (Optional)
+              </label>
+              <DocumentUpload
+                onDocumentUpload={(document) => setLaw({ ...law, document })}
+                currentDocument={law.document}
               />
             </div>
 
@@ -186,7 +242,13 @@ export default function AddLawModal({ onClose, onSave }: AddLawModalProps) {
           </div>
         </form>
       </div>
+
+      {showAnalysisModal && (
+        <DocumentAnalysisModal
+          onClose={() => setShowAnalysisModal(false)}
+          onAnalysisComplete={handleAnalysisComplete}
+        />
+      )}
     </div>
   );
 }
-

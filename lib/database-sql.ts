@@ -30,7 +30,7 @@ export async function getAllLaws(): Promise<Database> {
   
   const DATA: { [key: string]: Law } = {};
   result.rows.forEach(row => {
-    DATA[row.id] = {
+    const law: Law = {
       jurisdiction: row.jurisdiction,
       status: row.status,
       sector: row.sector,
@@ -42,6 +42,18 @@ export async function getAllLaws(): Promise<Database> {
         STOCK_IMPACTED: row.stocks_impacted || []
       }
     };
+    
+    // Add document if exists
+    if (row.document_filename) {
+      law.document = {
+        filename: row.document_filename,
+        content: row.document_content,
+        contentType: row.document_content_type,
+        uploadedAt: row.document_uploaded_at.toISOString()
+      };
+    }
+    
+    DATA[row.id] = law;
   });
   
   return { DATA };
@@ -75,7 +87,7 @@ export async function getLawById(lawId: string): Promise<Law | null> {
   if (result.rows.length === 0) return null;
   
   const row = result.rows[0];
-  return {
+  const law: Law = {
     jurisdiction: row.jurisdiction,
     status: row.status,
     sector: row.sector,
@@ -87,6 +99,18 @@ export async function getLawById(lawId: string): Promise<Law | null> {
       STOCK_IMPACTED: row.stocks_impacted || []
     }
   };
+  
+  // Add document if exists
+  if (row.document_filename) {
+    law.document = {
+      filename: row.document_filename,
+      content: row.document_content,
+      contentType: row.document_content_type,
+      uploadedAt: row.document_uploaded_at.toISOString()
+    };
+  }
+  
+  return law;
 }
 
 // Create new law
@@ -96,8 +120,11 @@ export async function createLaw(lawId: string, law: Law): Promise<Law> {
     await client.query('BEGIN');
     
     await client.query(`
-      INSERT INTO laws (id, jurisdiction, status, sector, impact, confidence, published, affected)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      INSERT INTO laws (
+        id, jurisdiction, status, sector, impact, confidence, published, affected,
+        document_filename, document_content, document_content_type, document_uploaded_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
     `, [
       lawId,
       law.jurisdiction,
@@ -106,7 +133,11 @@ export async function createLaw(lawId: string, law: Law): Promise<Law> {
       law.impact,
       law.confidence,
       law.published,
-      law.affected
+      law.affected,
+      law.document?.filename || null,
+      law.document?.content || null,
+      law.document?.contentType || null,
+      law.document?.uploadedAt || null
     ]);
     
     await client.query('COMMIT');
@@ -167,6 +198,29 @@ export async function updateLaw(lawId: string, updates: Partial<Law>): Promise<L
       updateFields.push(`published = $${paramCount++}`);
       values.push(updates.published);
     }
+    if (updates.document !== undefined) {
+      if (updates.document === null) {
+        // Remove document
+        updateFields.push(`document_filename = $${paramCount++}`);
+        values.push(null);
+        updateFields.push(`document_content = $${paramCount++}`);
+        values.push(null);
+        updateFields.push(`document_content_type = $${paramCount++}`);
+        values.push(null);
+        updateFields.push(`document_uploaded_at = $${paramCount++}`);
+        values.push(null);
+      } else {
+        // Add/update document
+        updateFields.push(`document_filename = $${paramCount++}`);
+        values.push(updates.document.filename);
+        updateFields.push(`document_content = $${paramCount++}`);
+        values.push(updates.document.content);
+        updateFields.push(`document_content_type = $${paramCount++}`);
+        values.push(updates.document.contentType);
+        updateFields.push(`document_uploaded_at = $${paramCount++}`);
+        values.push(updates.document.uploadedAt);
+      }
+    }
     
     if (updateFields.length === 0) {
       await client.query('COMMIT');
@@ -216,7 +270,7 @@ export async function deleteLaw(lawId: string): Promise<boolean> {
       notes: `Deleted law ${lawId}`
     });
     
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;

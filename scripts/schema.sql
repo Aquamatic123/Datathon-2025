@@ -20,6 +20,11 @@ CREATE TABLE IF NOT EXISTS laws (
     confidence VARCHAR(50) NOT NULL CHECK (confidence IN ('High', 'Medium', 'Low')),
     published DATE NOT NULL,
     affected INTEGER NOT NULL DEFAULT 0,
+    -- Document storage
+    document_filename VARCHAR(500),
+    document_content TEXT,
+    document_content_type VARCHAR(100),
+    document_uploaded_at TIMESTAMP,
     -- LLM metadata fields (JSONB for flexible storage)
     llm_metadata JSONB,
     llm_summary TEXT,
