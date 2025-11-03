@@ -1,14 +1,23 @@
 import { DsqlSigner } from '@aws-sdk/dsql-signer';
 import { Client } from 'pg';
 
-// Environment variables
-const RAW_ENDPOINT = process.env.AURORA_DSQL_ENDPOINT!;
-const APP_REGION = process.env.APP_REGION || 'us-west-2';
-const DATABASE_NAME = process.env.DATABASE_NAME || 'postgres';
-const APP_ACCESS_KEY_ID = process.env.APP_ACCESS_KEY_ID!;
-const APP_SECRET_ACCESS_KEY = process.env.APP_SECRET_ACCESS_KEY!;
+/**
+ * Get environment variables at runtime (not at module load time)
+ * This is crucial for AWS Amplify compatibility
+ */
+function getEnvVars() {
+  return {
+    RAW_ENDPOINT: process.env.AURORA_DSQL_ENDPOINT!,
+    APP_REGION: process.env.APP_REGION || 'us-west-2',
+    DATABASE_NAME: process.env.DATABASE_NAME || 'postgres',
+    APP_ACCESS_KEY_ID: process.env.APP_ACCESS_KEY_ID!,
+    APP_SECRET_ACCESS_KEY: process.env.APP_SECRET_ACCESS_KEY!,
+  };
+}
 
-// Extract hostname from endpoint (remove any query parameters or paths)
+/**
+ * Extract hostname from endpoint (remove any query parameters or paths)
+ */
 function extractHostname(endpoint: string): string {
   if (!endpoint) return endpoint;
   
@@ -24,40 +33,41 @@ function extractHostname(endpoint: string): string {
   return cleaned;
 }
 
-const CLUSTER_ENDPOINT = extractHostname(RAW_ENDPOINT);
-
-console.log('\n🔧 Aurora DSQL Configuration:');
-console.log('  - Raw Endpoint:', RAW_ENDPOINT || 'NOT SET');
-console.log('  - Cleaned Hostname:', CLUSTER_ENDPOINT);
-console.log('  - APP_REGION:', APP_REGION);
-console.log('  - DATABASE_NAME:', DATABASE_NAME);
-console.log('  - APP_ACCESS_KEY_ID:', APP_ACCESS_KEY_ID ? '✓ Set' : '✗ Not set');
-console.log('  - APP_SECRET_ACCESS_KEY:', APP_SECRET_ACCESS_KEY ? '✓ Set' : '✗ Not set\n');
-
-if (!CLUSTER_ENDPOINT) {
-  throw new Error('AURORA_DSQL_ENDPOINT environment variable is required');
-}
-
-if (!APP_ACCESS_KEY_ID || !APP_SECRET_ACCESS_KEY) {
-  throw new Error('APP_ACCESS_KEY_ID and APP_SECRET_ACCESS_KEY environment variables are required');
+/**
+ * Get cluster endpoint (hostname only)
+ */
+function getClusterEndpoint(): string {
+  const env = getEnvVars();
+  return extractHostname(env.RAW_ENDPOINT);
 }
 
 /**
  * Generate Aurora DSQL authentication token
  */
 async function generateAuthToken(): Promise<string> {
-  console.log('🔑 Generating Aurora DSQL authentication token...');
-  console.log('  - Using hostname:', CLUSTER_ENDPOINT);
-  console.log('  - Using region:', APP_REGION);
-  console.log('  - Using access key:', APP_ACCESS_KEY_ID.substring(0, 8) + '...');
+  const env = getEnvVars();
+  const clusterEndpoint = getClusterEndpoint();
   
+  console.log('🔑 Generating Aurora DSQL authentication token...');
+  console.log('  - Using hostname:', clusterEndpoint);
+  console.log('  - Using region:', env.APP_REGION);
+  console.log('  - Using access key:', env.APP_ACCESS_KEY_ID ? env.APP_ACCESS_KEY_ID.substring(0, 8) + '...' : 'NOT SET');
+  
+  if (!clusterEndpoint) {
+    throw new Error('AURORA_DSQL_ENDPOINT environment variable is required');
+  }
+  
+  if (!env.APP_ACCESS_KEY_ID || !env.APP_SECRET_ACCESS_KEY) {
+    throw new Error('APP_ACCESS_KEY_ID and APP_SECRET_ACCESS_KEY environment variables are required');
+  }
+
   const signer = new DsqlSigner({
-    hostname: CLUSTER_ENDPOINT,
-    region: APP_REGION,
+    hostname: clusterEndpoint,
+    region: env.APP_REGION,
     // Explicitly provide credentials since we're using APP_* variable names
     credentials: {
-      accessKeyId: APP_ACCESS_KEY_ID,
-      secretAccessKey: APP_SECRET_ACCESS_KEY,
+      accessKeyId: env.APP_ACCESS_KEY_ID,
+      secretAccessKey: env.APP_SECRET_ACCESS_KEY,
     }
   });
 
@@ -75,23 +85,26 @@ async function generateAuthToken(): Promise<string> {
  * Connect to Aurora DSQL database
  */
 export async function connectToDatabase(): Promise<Client> {
+  const env = getEnvVars();
+  const clusterEndpoint = getClusterEndpoint();
+  
   console.log('\n🔌 Connecting to Aurora DSQL...');
   
   const token = await generateAuthToken();
   
   const client = new Client({
-    host: CLUSTER_ENDPOINT,
+    host: clusterEndpoint,
     port: 5432,
     user: 'admin',
     password: token,
-    database: DATABASE_NAME,
+    database: env.DATABASE_NAME,
     ssl: { rejectUnauthorized: true }
   });
 
-  console.log('  - Host:', CLUSTER_ENDPOINT);
+  console.log('  - Host:', clusterEndpoint);
   console.log('  - Port: 5432');
   console.log('  - User: admin');
-  console.log('  - Database:', DATABASE_NAME);
+  console.log('  - Database:', env.DATABASE_NAME);
   console.log('  - SSL: enabled');
 
   try {

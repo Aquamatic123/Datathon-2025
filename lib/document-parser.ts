@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import pdf from 'pdf-parse';
+import * as pdfParse from 'pdf-parse';
 
 /**
  * Parse different document formats to extract text
@@ -87,6 +87,8 @@ function parseXmlFile(buffer: Buffer): string {
 
 // Parse PDF file using pdf-parse
 async function parsePdfFile(buffer: Buffer): Promise<string> {
+  // pdf-parse is a CommonJS module, need to handle it specially
+  const pdf = (pdfParse as any).default || pdfParse;
   const data = await pdf(buffer);
   const text = data.text.trim();
   

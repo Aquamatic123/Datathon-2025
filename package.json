@@ -25,7 +25,9 @@
     "recharts": "^2.10.0"
   },
   "devDependencies": {
+    "@types/formidable": "^3.4.6",
     "@types/node": "^20.10.0",
+    "@types/pdf-parse": "^1.1.5",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "autoprefixer": "^10.4.0",

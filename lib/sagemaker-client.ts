@@ -1,27 +1,34 @@
 import { SageMakerRuntimeClient, InvokeEndpointCommand } from '@aws-sdk/client-sagemaker-runtime';
 
-const SAGEMAKER_ENDPOINT_NAME = process.env.SAGEMAKER_ENDPOINT_NAME!;
-const APP_REGION = process.env.APP_REGION || 'us-west-2';
-const APP_ACCESS_KEY_ID = process.env.APP_ACCESS_KEY_ID!;
-const APP_SECRET_ACCESS_KEY = process.env.APP_SECRET_ACCESS_KEY!;
-
-console.log('🤖 SageMaker Configuration:');
-console.log('  - Endpoint:', SAGEMAKER_ENDPOINT_NAME || 'NOT SET');
-console.log('  - Region:', APP_REGION);
-
-if (!SAGEMAKER_ENDPOINT_NAME) {
-  console.warn('⚠️ SAGEMAKER_ENDPOINT_NAME not set - AI extraction will not work');
+/**
+ * Get environment variables at runtime (not at module load time)
+ * This is crucial for AWS Amplify compatibility
+ */
+function getEnvVars() {
+  return {
+    SAGEMAKER_ENDPOINT_NAME: process.env.SAGEMAKER_ENDPOINT_NAME,
+    APP_REGION: process.env.APP_REGION || 'us-west-2',
+    APP_ACCESS_KEY_ID: process.env.APP_ACCESS_KEY_ID,
+    APP_SECRET_ACCESS_KEY: process.env.APP_SECRET_ACCESS_KEY,
+  };
 }
 
 /**
  * Create SageMaker Runtime client
+ * Creates client at runtime with environment variables
  */
 function createSageMakerClient() {
+  const env = getEnvVars();
+  
+  if (!env.APP_ACCESS_KEY_ID || !env.APP_SECRET_ACCESS_KEY) {
+    throw new Error('AWS credentials (APP_ACCESS_KEY_ID and APP_SECRET_ACCESS_KEY) are required');
+  }
+  
   return new SageMakerRuntimeClient({
-    region: APP_REGION,
+    region: env.APP_REGION,
     credentials: {
-      accessKeyId: APP_ACCESS_KEY_ID,
-      secretAccessKey: APP_SECRET_ACCESS_KEY,
+      accessKeyId: env.APP_ACCESS_KEY_ID,
+      secretAccessKey: env.APP_SECRET_ACCESS_KEY,
     }
   });
 }
@@ -31,12 +38,15 @@ function createSageMakerClient() {
  * Uses multi-step approach for better accuracy
  */
 export async function extractLawInfoFromText(documentText: string): Promise<any> {
+  const env = getEnvVars();
+  
   console.log('🤖 Starting AI extraction with multi-call approach...');
   console.log(`  - Document length: ${documentText.length} chars`);
-  console.log(`  - Endpoint: ${SAGEMAKER_ENDPOINT_NAME}`);
+  console.log(`  - Endpoint: ${env.SAGEMAKER_ENDPOINT_NAME || 'NOT SET'}`);
+  console.log(`  - Region: ${env.APP_REGION}`);
   console.log(`  - Strategy: 4 separate API calls for maximum accuracy\n`);
   
-  if (!SAGEMAKER_ENDPOINT_NAME) {
+  if (!env.SAGEMAKER_ENDPOINT_NAME) {
     console.error('❌ No SageMaker endpoint configured!');
     throw new Error('SAGEMAKER_ENDPOINT_NAME is required for AI extraction');
   }
@@ -462,8 +472,14 @@ function extractFromRawText(documentText: string): any {
  * Invoke SageMaker endpoint with error handling
  */
 async function invokeSageMaker(client: any, payload: any): Promise<any> {
+  const env = getEnvVars();
+  
+  if (!env.SAGEMAKER_ENDPOINT_NAME) {
+    throw new Error('SAGEMAKER_ENDPOINT_NAME environment variable is not set');
+  }
+  
   const command = new InvokeEndpointCommand({
-    EndpointName: SAGEMAKER_ENDPOINT_NAME,
+    EndpointName: env.SAGEMAKER_ENDPOINT_NAME,
     ContentType: 'application/json',
     Body: JSON.stringify(payload),
   });
