@@ -1,5 +1,4 @@
 import * as cheerio from 'cheerio';
-import * as pdfParse from 'pdf-parse';
 
 /**
  * Parse different document formats to extract text
@@ -86,21 +85,22 @@ function parseXmlFile(buffer: Buffer): string {
 }
 
 // Parse PDF file using pdf-parse
+// CRITICAL: Load pdf-parse dynamically (lazy import) to prevent DOMMatrix errors on Lambda
 async function parsePdfFile(buffer: Buffer): Promise<string> {
   try {
-    // pdf-parse uses native binaries that may not work on Lambda
-    // Try to use it, but have a fallback
+    // Dynamic import - only loads when actually parsing PDF
+    // This prevents pdfjs-dist from loading at module level (which requires DOMMatrix)
+    const pdfParse = await import('pdf-parse');
     const pdf = (pdfParse as any).default || pdfParse;
     const data = await pdf(buffer);
     const text = data.text.trim();
     
     console.log(`✓ Parsed PDF file, ${data.numpages} pages, ${text.length} chars`);
     return text;
-  } catch (error) {
-    console.warn('⚠️ PDF parsing failed, likely due to Lambda environment. Returning error message.');
-    console.warn('Error:', error);
-    // On Lambda, pdf-parse might not work due to missing native dependencies
-    throw new Error('PDF parsing is not supported on AWS Lambda. Please upload TXT, HTML, or XML files instead.');
+  } catch (error: any) {
+    console.warn('⚠️ PDF parsing failed on Lambda:', error.message);
+    // On Lambda, pdfjs-dist requires DOMMatrix which doesn't exist in Node.js
+    throw new Error('PDF parsing is not supported on AWS Lambda due to missing browser APIs. Please upload TXT, HTML, or XML files instead.');
   }
 }
 
