@@ -36,48 +36,34 @@ export default async function handler(
 
   try {
       // Parse the uploaded file
+      console.log('Step 1: Parsing uploaded file...');
       const { file, text } = await parseUploadedFile(req);
-
-      console.log(`📄 File received: ${file.originalFilename}`);
+      console.log(`✓ File received: ${file.originalFilename}`);
       console.log(`  - Size: ${file.size} bytes`);
       console.log(`  - Type: ${file.mimetype}`);
+      console.log(`  - Path: ${file.filepath}`);
 
       // Parse document to extract text
+      console.log('Step 2: Reading file buffer...');
       const fileBuffer = fs.readFileSync(file.filepath);
+      console.log(`✓ Buffer read: ${fileBuffer.length} bytes`);
+      
+      console.log('Step 3: Parsing document to extract text...');
       const documentText = await parseDocument(fileBuffer, file.originalFilename || 'document.txt');
+      console.log(`✓ Text extracted: ${documentText.length} chars`);
       
       // Truncate if too long
+      console.log('Step 4: Truncating text...');
       const truncatedText = truncateText(documentText, 15000);
-
-      console.log(`📝 Extracted text from document:`);
-      console.log(`  - Original length: ${documentText.length} chars`);
-      console.log(`  - Truncated length: ${truncatedText.length} chars`);
+      console.log(`✓ Text ready: ${truncatedText.length} chars`);
 
       // Extract law information using AI model (4-call process)
-      console.log('\n🤖 Starting AI extraction (4 focused API calls)...');
-      console.log('  Call 1: Jurisdiction & Status');
-      console.log('  Call 2: Date & Title');
-      console.log('  Call 3: Sector & Impact');
-      console.log('  Call 4: Summary');
-      console.log('  Strategy: Extract real values from AI, not defaults\n');
-      
+      console.log('Step 5: Starting AI extraction (4 focused API calls)...');
       const lawData = await extractLawInfoFromText(truncatedText);
-
-      // Log extracted data
-      console.log('\n✅ AI extraction process completed!');
-      console.log('  Extracted fields:');
-      console.log('  - Law ID:', lawData.lawId);
-      console.log('  - Title:', lawData.title);
-      console.log('  - Jurisdiction:', lawData.jurisdiction);
-      console.log('  - Status:', lawData.status);
-      console.log('  - Sector:', lawData.sector);
-      console.log('  - Impact:', lawData.impact);
-      console.log('  - Confidence:', lawData.confidence);
-      console.log('  - Published:', lawData.published);
-      console.log('\n  Full data:', JSON.stringify(lawData, null, 2));
+      console.log('✓ AI extraction completed');
 
       // Create the law in Aurora DSQL
-      console.log('\n💾 Creating law in Aurora DSQL...');
+      console.log('Step 6: Creating law in Aurora DSQL...');
       
       const lawToCreate = {
         jurisdiction: lawData.jurisdiction || 'Unknown',
@@ -93,12 +79,8 @@ export default async function handler(
       };
 
       const createdLaw = await createLaw(lawData.lawId, lawToCreate);
-
-      console.log('✅ Law created successfully!');
-      console.log('  - Law ID:', lawData.lawId);
-      console.log('  - Sector:', lawToCreate.sector);
-      console.log('  - Impact:', lawToCreate.impact);
-      console.log('\n========================================\n');
+      console.log(`✓ Law created: ${lawData.lawId}`);
+      console.log('========================================');
 
       // Clean up uploaded file
       try {
@@ -124,14 +106,16 @@ export default async function handler(
       });
 
   } catch (error: any) {
-    console.error('\n✗ Document upload failed!');
-    console.error('Error:', error.message);
-    console.error('Stack:', error.stack);
-    console.log('\n========================================\n');
+    console.error('\n✗ Upload failed at some step');
+    console.error('Error message:', error.message);
+    console.error('Error name:', error.name);
+    console.error('Full error:', error);
+    console.log('========================================');
     
     return res.status(500).json({
       success: false,
       error: error.message || 'Document processing failed',
+      step: error.message?.includes('Step') ? error.message.split(':')[0] : 'Unknown',
     });
   }
 }

@@ -87,13 +87,21 @@ function parseXmlFile(buffer: Buffer): string {
 
 // Parse PDF file using pdf-parse
 async function parsePdfFile(buffer: Buffer): Promise<string> {
-  // pdf-parse is a CommonJS module, need to handle it specially
-  const pdf = (pdfParse as any).default || pdfParse;
-  const data = await pdf(buffer);
-  const text = data.text.trim();
-  
-  console.log(`✓ Parsed PDF file, ${data.numpages} pages, ${text.length} chars`);
-  return text;
+  try {
+    // pdf-parse uses native binaries that may not work on Lambda
+    // Try to use it, but have a fallback
+    const pdf = (pdfParse as any).default || pdfParse;
+    const data = await pdf(buffer);
+    const text = data.text.trim();
+    
+    console.log(`✓ Parsed PDF file, ${data.numpages} pages, ${text.length} chars`);
+    return text;
+  } catch (error) {
+    console.warn('⚠️ PDF parsing failed, likely due to Lambda environment. Returning error message.');
+    console.warn('Error:', error);
+    // On Lambda, pdf-parse might not work due to missing native dependencies
+    throw new Error('PDF parsing is not supported on AWS Lambda. Please upload TXT, HTML, or XML files instead.');
+  }
 }
 
 /**
