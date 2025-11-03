@@ -3,7 +3,6 @@ const nextConfig = {
   reactStrictMode: true,
   
   // Explicitly expose environment variables for AWS Amplify
-  // These will be available via process.env in API routes and server-side code
   env: {
     AURORA_DSQL_ENDPOINT: process.env.AURORA_DSQL_ENDPOINT,
     APP_REGION: process.env.APP_REGION,
@@ -13,8 +12,23 @@ const nextConfig = {
     SAGEMAKER_ENDPOINT_NAME: process.env.SAGEMAKER_ENDPOINT_NAME,
   },
   
-  // Note: File upload size limit is configured per API route via formidable
-  // See pages/api/upload-document.ts for maxFileSize configuration
+  // Increase API route timeout for file processing
+  experimental: {
+    proxyTimeout: 300000, // 5 minutes
+  },
+  
+  // Configure for serverless deployment
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Don't bundle these on server
+      config.externals = config.externals || [];
+      config.externals.push({
+        bufferutil: 'bufferutil',
+        'utf-8-validate': 'utf-8-validate',
+      });
+    }
+    return config;
+  },
 }
 
 module.exports = nextConfig
