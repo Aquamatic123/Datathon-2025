@@ -43,6 +43,8 @@ function getClusterEndpoint(): string {
 
 /**
  * Generate Aurora DSQL authentication token
+ * On AWS Lambda/Amplify: Uses Lambda execution role credentials automatically
+ * On localhost: Uses explicit credentials from env vars
  */
 async function generateAuthToken(): Promise<string> {
   const env = getEnvVars();
@@ -51,25 +53,27 @@ async function generateAuthToken(): Promise<string> {
   console.log('🔑 Generating Aurora DSQL authentication token...');
   console.log('  - Using hostname:', clusterEndpoint);
   console.log('  - Using region:', env.APP_REGION);
-  console.log('  - Using access key:', env.APP_ACCESS_KEY_ID ? env.APP_ACCESS_KEY_ID.substring(0, 8) + '...' : 'NOT SET');
+  console.log('  - Using access key:', env.APP_ACCESS_KEY_ID ? env.APP_ACCESS_KEY_ID.substring(0, 8) + '...' : 'Lambda role');
   
   if (!clusterEndpoint) {
     throw new Error('AURORA_DSQL_ENDPOINT environment variable is required');
   }
-  
-  if (!env.APP_ACCESS_KEY_ID || !env.APP_SECRET_ACCESS_KEY) {
-    throw new Error('APP_ACCESS_KEY_ID and APP_SECRET_ACCESS_KEY environment variables are required');
-  }
 
-  const signer = new DsqlSigner({
+  const signerConfig: any = {
     hostname: clusterEndpoint,
     region: env.APP_REGION,
-    // Explicitly provide credentials since we're using APP_* variable names
-    credentials: {
+  };
+  
+  // Only set explicit credentials if both are provided (for localhost)
+  if (env.APP_ACCESS_KEY_ID && env.APP_SECRET_ACCESS_KEY) {
+    signerConfig.credentials = {
       accessKeyId: env.APP_ACCESS_KEY_ID,
       secretAccessKey: env.APP_SECRET_ACCESS_KEY,
-    }
-  });
+    };
+  }
+  // Otherwise, SDK will use Lambda execution role or default credential chain
+
+  const signer = new DsqlSigner(signerConfig);
 
   try {
     const token = await signer.getDbConnectAdminAuthToken();

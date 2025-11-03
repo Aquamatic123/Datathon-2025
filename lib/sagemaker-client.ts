@@ -15,22 +15,28 @@ function getEnvVars() {
 
 /**
  * Create SageMaker Runtime client
- * Creates client at runtime with environment variables
+ * On AWS Lambda/Amplify: Uses Lambda execution role credentials automatically
+ * On localhost: Uses explicit credentials from env vars
  */
 function createSageMakerClient() {
   const env = getEnvVars();
   
-  if (!env.APP_ACCESS_KEY_ID || !env.APP_SECRET_ACCESS_KEY) {
-    throw new Error('AWS credentials (APP_ACCESS_KEY_ID and APP_SECRET_ACCESS_KEY) are required');
-  }
-  
-  return new SageMakerRuntimeClient({
+  // On AWS Lambda, let the SDK use the execution role credentials automatically
+  // On localhost, use explicit credentials if provided
+  const clientConfig: any = {
     region: env.APP_REGION,
-    credentials: {
+  };
+  
+  // Only set explicit credentials if both are provided (for localhost)
+  if (env.APP_ACCESS_KEY_ID && env.APP_SECRET_ACCESS_KEY) {
+    clientConfig.credentials = {
       accessKeyId: env.APP_ACCESS_KEY_ID,
       secretAccessKey: env.APP_SECRET_ACCESS_KEY,
-    }
-  });
+    };
+  }
+  // Otherwise, SDK will use Lambda execution role or default credential chain
+  
+  return new SageMakerRuntimeClient(clientConfig);
 }
 
 /**

@@ -1,0 +1,107 @@
+==========================================================
+AWS AMPLIFY ENVIRONMENT VARIABLES - UPDATED
+==========================================================
+
+✅ ROOT ISSUE FIXED:
+On AWS Amplify, the Lambda execution role provides credentials
+automatically. You DON'T need APP_ACCESS_KEY_ID and 
+APP_SECRET_ACCESS_KEY in Amplify Console!
+
+==========================================================
+VARIABLE 1 of 4:
+==========================================================
+
+Name:
+AURORA_DSQL_ENDPOINT
+
+Value:
+dbtjczatkd7mblohlvaxccqpg4.dsql.us-west-2.on.aws
+
+Secret:
+NO (leave unchecked)
+
+Notes:
+Just the hostname, no protocol, no query params
+
+==========================================================
+VARIABLE 2 of 4:
+==========================================================
+
+Name:
+APP_REGION
+
+Value:
+us-west-2
+
+Secret:
+NO (leave unchecked)
+
+Notes:
+AWS region where your services are located
+
+==========================================================
+VARIABLE 3 of 4:
+==========================================================
+
+Name:
+DATABASE_NAME
+
+Value:
+postgres
+
+Secret:
+NO (leave unchecked)
+
+Notes:
+Aurora DSQL database name
+
+==========================================================
+VARIABLE 4 of 4:
+==========================================================
+
+Name:
+SAGEMAKER_ENDPOINT_NAME
+
+Value:
+endpoint-quick-start-85saw
+
+Secret:
+NO (leave unchecked)
+
+Notes:
+SageMaker endpoint name (not ARN, not URL)
+
+==========================================================
+❌ REMOVE THESE FROM AMPLIFY CONSOLE (if present):
+==========================================================
+
+APP_ACCESS_KEY_ID - NOT NEEDED (Lambda role provides this)
+APP_SECRET_ACCESS_KEY - NOT NEEDED (Lambda role provides this)
+
+These should ONLY be in your local .env.local file!
+
+==========================================================
+IMPORTANT:
+==========================================================
+
+1. Lambda execution role provides AWS credentials automatically
+2. Your local .env.local STILL needs APP_ACCESS_KEY_ID and 
+   APP_SECRET_ACCESS_KEY for development
+3. On Amplify, the Lambda role must have permissions for:
+   - sagemaker:InvokeEndpoint
+   - dsql:DbConnectAdmin
+
+==========================================================
+HOW TO ADD THESE IN AMPLIFY CONSOLE:
+==========================================================
+
+1. Go to AWS Amplify Console
+2. Click on your app
+3. Click "App settings" → "Environment variables"
+4. Click "Manage variables"
+5. Add the 4 variables above
+6. Click "Save"
+7. Redeploy your app
+
+==========================================================
+
