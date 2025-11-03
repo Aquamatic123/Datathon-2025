@@ -20,8 +20,14 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  // Set JSON response header to prevent HTML error pages
+  res.setHeader('Content-Type', 'application/json');
+  
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ 
+      success: false,
+      error: 'Method not allowed' 
+    });
   }
 
   console.log('\n========================================');
@@ -121,12 +127,22 @@ export default async function handler(
     console.error('\n✗ Document upload failed!');
     console.error('Error:', error.message);
     console.error('Stack:', error.stack);
+    console.error('Error details:', JSON.stringify({
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      syscall: error.syscall
+    }));
     console.log('\n========================================\n');
 
+    // Ensure we always return JSON
+    res.setHeader('Content-Type', 'application/json');
+    
     return res.status(500).json({
       success: false,
       error: error.message || 'Document processing failed',
-      details: error.toString()
+      details: error.toString(),
+      errorType: error.name || 'UnknownError'
     });
   }
 }
@@ -136,26 +152,44 @@ export default async function handler(
  */
 function parseUploadedFile(req: NextApiRequest): Promise<{ file: formidable.File; text?: string }> {
   return new Promise((resolve, reject) => {
-    const form = formidable({
-      maxFileSize: 10 * 1024 * 1024, // 10MB max
-      keepExtensions: true,
-    });
+    console.log('📦 Initializing formidable...');
+    
+    try {
+      const form = formidable({
+        maxFileSize: 10 * 1024 * 1024, // 10MB max
+        keepExtensions: true,
+        // For AWS Lambda/Amplify, use /tmp directory
+        uploadDir: process.env.LAMBDA_TASK_ROOT ? '/tmp' : undefined,
+      });
 
-    form.parse(req, (err, fields, files) => {
-      if (err) {
-        reject(err);
-        return;
-      }
+      console.log('📦 Parsing multipart form data...');
 
-      const file = Array.isArray(files.file) ? files.file[0] : files.file;
-      
-      if (!file) {
-        reject(new Error('No file uploaded'));
-        return;
-      }
+      form.parse(req, (err, fields, files) => {
+        if (err) {
+          console.error('❌ Formidable parse error:', err);
+          reject(new Error(`File upload error: ${err.message}`));
+          return;
+        }
 
-      resolve({ file });
-    });
+        console.log('📦 Form parsed successfully');
+        console.log('  - Fields:', Object.keys(fields));
+        console.log('  - Files:', Object.keys(files));
+
+        const file = Array.isArray(files.file) ? files.file[0] : files.file;
+        
+        if (!file) {
+          console.error('❌ No file found in upload');
+          reject(new Error('No file uploaded'));
+          return;
+        }
+
+        console.log('✅ File parsed successfully');
+        resolve({ file });
+      });
+    } catch (error: any) {
+      console.error('❌ Error creating formidable instance:', error);
+      reject(new Error(`Formidable initialization error: ${error.message}`));
+    }
   });
 }
 
