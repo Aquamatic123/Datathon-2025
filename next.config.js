@@ -10,6 +10,7 @@ const nextConfig = {
     DATABASE_NAME: process.env.DATABASE_NAME,
     APP_ACCESS_KEY_ID: process.env.APP_ACCESS_KEY_ID,
     APP_SECRET_ACCESS_KEY: process.env.APP_SECRET_ACCESS_KEY,
+    SAGEMAKER_ENDPOINT_NAME: process.env.SAGEMAKER_ENDPOINT_NAME,
   },
 }
 

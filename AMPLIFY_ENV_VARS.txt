@@ -37,7 +37,7 @@ Variable 4 of 5: ⚠️ MARK AS SECRET
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Variable 5 of 5: ⚠️ MARK AS SECRET
+Variable 5 of 6: ⚠️ MARK AS SECRET
 
   Name:   APP_SECRET_ACCESS_KEY
   Value:  [PASTE YOUR SECRET ACCESS KEY HERE]
@@ -45,8 +45,17 @@ Variable 5 of 5: ⚠️ MARK AS SECRET
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+Variable 6 of 6: (OPTIONAL - for AI document upload feature)
+
+  Name:   SAGEMAKER_ENDPOINT_NAME
+  Value:  endpoint-quick-start-85saw
+  Secret: NO
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 IMPORTANT REMINDERS:
-  • All 5 variables are REQUIRED
+  • First 5 variables are REQUIRED for basic functionality
+  • 6th variable (SAGEMAKER_ENDPOINT_NAME) is OPTIONAL for AI document upload
   • Mark the last 2 as "Secret" in Amplify Console
   • Use hostname only for AURORA_DSQL_ENDPOINT (no https://)
   • Your .env.local is safely ignored by Git

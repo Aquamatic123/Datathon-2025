@@ -66,3 +66,7 @@ Thumbs.db
 *.tmp
 *.temp
 *.log
+
+# Test files (safe to commit example documents)
+# Uncomment if you want to ignore test documents
+# test-documents/

@@ -4,11 +4,13 @@ import DashboardHeader from '@/components/DashboardHeader';
 import AnalyticsCards from '@/components/AnalyticsCards';
 import LawsTable from '@/components/LawsTable';
 import AddLawModal from '@/components/AddLawModal';
+import UploadDocumentModal from '@/components/UploadDocumentModal';
 
 export default function Dashboard() {
   const [database, setDatabase] = useState<Database | null>(null);
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
@@ -45,7 +47,10 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <DashboardHeader onAddLaw={() => setShowAddModal(true)} />
+      <DashboardHeader 
+        onAddLaw={() => setShowAddModal(true)}
+        onUploadDocument={() => setShowUploadModal(true)}
+      />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <AnalyticsCards analytics={analytics} />
@@ -65,6 +70,16 @@ export default function Dashboard() {
           onClose={() => setShowAddModal(false)}
           onSave={() => {
             setShowAddModal(false);
+            fetchData();
+          }}
+        />
+      )}
+
+      {showUploadModal && (
+        <UploadDocumentModal
+          onClose={() => setShowUploadModal(false)}
+          onSuccess={() => {
+            setShowUploadModal(false);
             fetchData();
           }}
         />

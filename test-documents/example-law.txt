@@ -1,0 +1,29 @@
+Financial Services Reform Act 2024
+
+Jurisdiction: European Union
+Status: Pending
+Sector: Finance
+Published: April 1, 2024
+
+Summary:
+This comprehensive financial reform act introduces stricter capital requirements
+for banks and financial institutions operating in the European Union. The legislation
+aims to prevent future financial crises by ensuring banks maintain higher capital
+reserves and implement more robust risk management practices.
+
+Key Provisions:
+- Increased capital adequacy ratios
+- Enhanced stress testing requirements
+- Stricter lending standards
+- Improved consumer protections
+- Greater transparency in financial reporting
+
+Impact Assessment:
+The act is expected to have a moderate to high impact on the financial sector,
+particularly affecting large multinational banks and investment firms. Estimated
+market impact: 7/10 with medium confidence due to implementation timeline uncertainties.
+
+Affected Entities:
+Major banks, investment firms, insurance companies, and financial technology companies
+operating in EU markets will need to comply with new regulations within 24 months.
+

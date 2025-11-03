@@ -1,0 +1,159 @@
+Digital Privacy Protection Act of 2024
+United States Federal Legislation
+
+TITLE: An Act to Protect Consumer Privacy in the Digital Age
+
+ENACTED BY: 118th United States Congress
+STATUS: Active
+EFFECTIVE DATE: March 20, 2024
+JURISDICTION: United States of America
+
+SECTION 1: SHORT TITLE
+This Act may be cited as the "Digital Privacy Protection Act of 2024" or "DPPA 2024".
+
+SECTION 2: FINDINGS AND PURPOSE
+(a) FINDINGS - Congress finds the following:
+    (1) The digital economy has transformed how businesses collect, use, and share personal information.
+    (2) Consumers have limited knowledge and control over how their personal data is collected and used.
+    (3) Data breaches and unauthorized access to personal information pose significant risks to consumers.
+    (4) Current federal privacy protections are outdated and fragmented across various sector-specific laws.
+    (5) A comprehensive federal privacy framework is necessary to protect consumers and promote innovation.
+
+(b) PURPOSE - The purposes of this Act are:
+    (1) To establish clear, consistent privacy protections for consumers.
+    (2) To give individuals meaningful control over their personal information.
+    (3) To create accountability and transparency requirements for companies handling personal data.
+    (4) To provide strong enforcement mechanisms and penalties for violations.
+    (5) To harmonize privacy standards across the United States while allowing states to provide additional protections.
+
+SECTION 3: DEFINITIONS
+For purposes of this Act:
+
+(1) PERSONAL INFORMATION - Any information that identifies, relates to, describes, or is capable of being associated with a particular individual, including:
+    (A) Name, address, telephone number, email address
+    (B) Social security number, driver's license number
+    (C) Biometric information
+    (D) Internet or network activity information
+    (E) Geolocation data
+    (F) Audio, electronic, visual, or similar information
+    (G) Inferences drawn from the above to create consumer profiles
+
+(2) COVERED ENTITY - Any person, partnership, or corporation that:
+    (A) Does business in the United States
+    (B) Collects, processes, or transfers personal information of 10,000 or more individuals annually
+    (C) Derives more than 50% of revenue from processing or transferring personal information
+
+(3) SENSITIVE PERSONAL INFORMATION - Personal information that reveals:
+    (A) Social security number, driver's license, passport number
+    (B) Financial account information, credit or debit card number
+    (C) Precise geolocation
+    (D) Racial or ethnic origin
+    (E) Religious or philosophical beliefs
+    (F) Health information
+    (G) Sexual orientation or sex life
+    (H) Biometric or genetic data
+
+SECTION 4: CONSUMER RIGHTS
+
+(a) RIGHT TO KNOW - Individuals have the right to know:
+    (1) What personal information is collected about them
+    (2) The sources from which information is collected
+    (3) The business purposes for collecting or selling information
+    (4) Third parties with whom information is shared
+    (5) The retention period for personal information
+
+(b) RIGHT TO ACCESS - Individuals have the right to request and obtain from covered entities:
+    (1) A copy of their personal information in a portable format
+    (2) Information about how their data is processed
+    (3) Access to this information free of charge, twice per 12-month period
+
+(c) RIGHT TO DELETION - Individuals have the right to request deletion of their personal information, subject to certain exceptions for:
+    (1) Completing transactions
+    (2) Detecting security incidents
+    (3) Debugging to identify and repair errors
+    (4) Exercising free speech
+    (5) Complying with legal obligations
+    (6) Internal research uses
+
+(d) RIGHT TO CORRECTION - Individuals have the right to correct inaccurate personal information maintained by covered entities.
+
+(e) RIGHT TO OPT-OUT - Individuals have the right to opt out of:
+    (1) Sale of personal information
+    (2) Sharing for cross-context behavioral advertising
+    (3) Automated decision-making and profiling
+
+(f) RIGHT TO NON-DISCRIMINATION - Covered entities may not discriminate against individuals for exercising their privacy rights, including:
+    (1) Denying goods or services
+    (2) Charging different prices or rates
+    (3) Providing a different level of quality
+    (4) Suggesting different prices or quality levels
+
+SECTION 5: COVERED ENTITY OBLIGATIONS
+
+(a) CONSENT REQUIREMENTS - Covered entities must obtain affirmative express consent before:
+    (1) Collecting or processing sensitive personal information
+    (2) Using personal information for purposes beyond original collection purpose
+    (3) Transferring personal information to third parties
+    (4) Using personal information for targeted advertising
+
+(b) PRIVACY NOTICE REQUIREMENTS - Covered entities must provide clear, conspicuous privacy notices that include:
+    (1) Categories of personal information collected
+    (2) Purposes for collection and use
+    (3) Categories of third parties with whom information is shared
+    (4) Individual rights and how to exercise them
+    (5) Contact information for privacy inquiries
+
+(c) DATA MINIMIZATION - Covered entities must:
+    (1) Limit collection to what is reasonably necessary and proportionate
+    (2) Not collect personal information for undefined purposes
+    (3) Regularly review and delete information no longer necessary
+
+(d) DATA SECURITY - Covered entities must implement reasonable administrative, technical, and physical safeguards to protect personal information, including:
+    (1) Encryption of data in transit and at rest
+    (2) Access controls and authentication
+    (3) Regular security assessments
+    (4) Employee training on data protection
+    (5) Incident response procedures
+
+(e) PRIVACY BY DESIGN - Covered entities must implement privacy protections from the inception of products and services.
+
+SECTION 6: ENFORCEMENT
+
+(a) FEDERAL TRADE COMMISSION - The FTC has primary enforcement authority under this Act.
+
+(b) STATE ATTORNEYS GENERAL - State attorneys general may bring civil actions for violations affecting state residents.
+
+(c) CIVIL PENALTIES - Violations subject to civil penalties of:
+    (1) Up to $10,000 per violation for general violations
+    (2) Up to $50,000 per violation for intentional or repeated violations
+    (3) Up to $100,000 per violation involving sensitive information of minors
+
+(d) PRIVATE RIGHT OF ACTION - Individuals may bring civil action for violations involving:
+    (1) Unauthorized access or disclosure due to failure to implement reasonable security
+    (2) Violations of consent requirements for sensitive information
+    (3) Statutory damages: $100-$750 per violation per individual
+
+SECTION 7: IMPACT ASSESSMENT
+
+This legislation is expected to have significant impact on:
+- Technology sector companies, particularly social media platforms, data brokers, and cloud service providers
+- Marketing and advertising technology companies
+- Healthcare technology and telehealth providers
+- Financial services and fintech companies
+- E-commerce platforms and online retailers
+
+Market impact is estimated at 8/10, affecting companies with combined market capitalization exceeding $5 trillion. Compliance costs are projected at $10-50 million for large enterprises and $100,000-$1 million for small to medium businesses.
+
+SECTION 8: IMPLEMENTATION TIMELINE
+- Effective Date: March 20, 2024
+- Large Entities (>$25M revenue): Compliance required within 180 days
+- Small/Medium Entities: Compliance required within 365 days
+- Regulations and guidance: FTC to issue within 90 days
+
+SECTION 9: PREEMPTION AND STATE LAWS
+This Act establishes a federal floor for privacy protections. States may enact more stringent privacy laws but may not provide less protection than established herein.
+
+---
+CONFIDENCE LEVEL: HIGH
+This legislation represents the most comprehensive federal privacy law in U.S. history, bringing American privacy standards closer to international frameworks like GDPR while maintaining flexibility for American innovation.
+

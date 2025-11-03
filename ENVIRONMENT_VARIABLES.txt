@@ -24,6 +24,11 @@ Variable Name: APP_SECRET_ACCESS_KEY
 Variable Value: [YOUR_SECRET_ACCESS_KEY_HERE]
 Secret: YES (check the secret toggle)
 
+Variable Name: SAGEMAKER_ENDPOINT_NAME
+Variable Value: endpoint-quick-start-85saw
+Secret: NO
+(OPTIONAL - only needed for AI document upload feature)
+
 ========================================
 IMPORTANT NOTES
 ========================================
