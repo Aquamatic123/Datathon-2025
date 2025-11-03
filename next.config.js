@@ -12,6 +12,9 @@ const nextConfig = {
     APP_SECRET_ACCESS_KEY: process.env.APP_SECRET_ACCESS_KEY,
     SAGEMAKER_ENDPOINT_NAME: process.env.SAGEMAKER_ENDPOINT_NAME,
   },
+  
+  // Note: File upload size limit is configured per API route via formidable
+  // See pages/api/upload-document.ts for maxFileSize configuration
 }
 
 module.exports = nextConfig
