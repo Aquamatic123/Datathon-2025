@@ -13,7 +13,7 @@ export const config = {
   },
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
   // Force JSON response header immediately
   res.setHeader('Content-Type', 'application/json');
   
@@ -22,56 +22,64 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return;
   }
 
-  try {
-    const form = formidable({
-      maxFileSize: 10 * 1024 * 1024,
-      keepExtensions: true,
-      uploadDir: process.env.LAMBDA_TASK_ROOT ? '/tmp' : undefined,
-    });
+  const form = formidable({
+    maxFileSize: 10 * 1024 * 1024,
+    keepExtensions: true,
+    uploadDir: process.env.LAMBDA_TASK_ROOT ? '/tmp' : undefined,
+  });
 
-    const [fields, files] = await form.parse(req);
-    const file = Array.isArray(files.file) ? files.file[0] : files.file;
-
-    if (!file) {
-      res.status(400).json({ success: false, error: 'No file uploaded' });
+  // Use callback API - more reliable on Lambda
+  form.parse(req, async (err, fields, files) => {
+    if (err) {
+      console.error('Formidable error:', err);
+      res.status(500).json({ success: false, error: 'File upload failed' });
       return;
     }
 
-    const fileBuffer = fs.readFileSync(file.filepath);
-    const documentText = await parseDocument(fileBuffer, file.originalFilename || 'document.txt');
-    const truncatedText = truncateText(documentText, 15000);
-    const lawData = await extractLawInfoFromText(truncatedText);
+    try {
+      const file = Array.isArray(files.file) ? files.file[0] : files.file;
 
-    const lawToCreate = {
-      jurisdiction: lawData.jurisdiction || 'Unknown',
-      status: validateStatus(lawData.status),
-      sector: lawData.sector || 'General',
-      impact: validateImpact(lawData.impact),
-      confidence: validateConfidence(lawData.confidence),
-      published: lawData.published || new Date().toISOString().split('T')[0],
-      affected: 0,
-      stocks_impacted: { STOCK_IMPACTED: [] }
-    };
-
-    const createdLaw = await createLaw(lawData.lawId, lawToCreate);
-
-    try { fs.unlinkSync(file.filepath); } catch (e) {}
-
-    res.status(201).json({
-      success: true,
-      data: {
-        lawId: lawData.lawId,
-        createdLaw
+      if (!file) {
+        res.status(400).json({ success: false, error: 'No file uploaded' });
+        return;
       }
-    });
 
-  } catch (error: any) {
-    console.error('Upload error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Upload failed'
-    });
-  }
+      const fileBuffer = fs.readFileSync(file.filepath);
+      const documentText = await parseDocument(fileBuffer, file.originalFilename || 'document.txt');
+      const truncatedText = truncateText(documentText, 15000);
+      const lawData = await extractLawInfoFromText(truncatedText);
+
+      const lawToCreate = {
+        jurisdiction: lawData.jurisdiction || 'Unknown',
+        status: validateStatus(lawData.status),
+        sector: lawData.sector || 'General',
+        impact: validateImpact(lawData.impact),
+        confidence: validateConfidence(lawData.confidence),
+        published: lawData.published || new Date().toISOString().split('T')[0],
+        affected: 0,
+        stocks_impacted: { STOCK_IMPACTED: [] }
+      };
+
+      const createdLaw = await createLaw(lawData.lawId, lawToCreate);
+
+      try { fs.unlinkSync(file.filepath); } catch (e) {}
+
+      res.status(201).json({
+        success: true,
+        data: {
+          lawId: lawData.lawId,
+          createdLaw
+        }
+      });
+
+    } catch (error: any) {
+      console.error('Processing error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Upload failed'
+      });
+    }
+  });
 }
 
 function validateStatus(status: any): string {
